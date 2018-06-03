@@ -7,6 +7,9 @@ extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
 
+#[macro_use]
+extern crate structopt;
+
 use std::f64::consts::PI;
 
 mod bsdf;
@@ -29,11 +32,10 @@ use rayon::prelude::*;
 use rectangle::Rectangle;
 use scene::Scene;
 use sphere::Sphere;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
 type Float3 = cgmath::Vector3<f64>;
-
-const WIDTH: usize = 512;
-const HEIGHT: usize = 512;
 
 fn build_scene() -> Scene {
     Scene::new(
@@ -160,7 +162,8 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
 
                     let tangent = normal.cross(w_up).normalize();
                     let bitangent = normal.cross(tangent).normalize();
-                    let next_direction = tangent * r1.cos() * r2s + bitangent * r1.sin() * r2s
+                    let next_direction = tangent * r1.cos() * r2s 
+                        + bitangent * r1.sin() * r2s
                         + normal * (1.0 - r2).sqrt();
 
                     compute_radiance(
@@ -255,17 +258,33 @@ fn ceil_divide(dividend: usize, divisor: usize) -> usize {
     }
 }
 
+/// Command-line Arguments
+#[derive(StructOpt, Debug)]
+#[structopt(name = "smallpt", about = "A rust implementation of Kevin Beason's educational 100 lines small ray/pathtracer http://www.kevinbeason.com/smallpt/")]
+struct Opt {
+    /// Set sample count
+    #[structopt(short = "s", long = "samples", default_value = "32")]
+    samples: u32,
+
+    /// Set final output width
+    #[structopt(short = "w", long = "width", default_value = "512")]
+    width: usize,
+
+    /// Set final output height
+    #[structopt(short = "h", long = "height", default_value = "512")]
+    height: usize,
+}
+
 fn main() {
-    let mut backbuffer = vec![Float3::zero(); WIDTH * HEIGHT];
+    let args = Opt::from_args();
+    println!("{:?}", args);
+
+    let mut backbuffer = vec![Float3::zero(); args.width * args.height];
 
     // Fetch desired number of samples from command line arguments
-    let num_samples = match std::env::args().nth(1) {
-        Some(samples_str) => match samples_str.parse::<u32>() {
-            Ok(s) => s / 4,
-            Err(_) => 1,
-        },
-        None => 1,
-    };
+    let num_samples = (args.samples / 4).max(1);
+    let width = args.width.max(1);
+    let height = args.height.max(1);
 
     let scene = build_scene();
 
@@ -275,14 +294,14 @@ fn main() {
     };
 
     let aperture = 0.5135;
-    let cx = Float3::new(WIDTH as f64 * aperture / HEIGHT as f64, 0.0, 0.0);
+    let cx = Float3::new(width as f64 * aperture / height as f64, 0.0, 0.0);
     let cy = cx.cross(camera.direction).normalize() * aperture;
 
     // Split the work
     let num_cpus = num_cpus::get();
     let num_inner_chunks = num_cpus * num_cpus;
     let num_outer_chunks = 100;
-    let outer_chunk_size = ceil_divide(WIDTH * HEIGHT, num_outer_chunks);
+    let outer_chunk_size = ceil_divide(width * height, num_outer_chunks);
 
     for (outer_chunk_index, outer_chunk) in backbuffer.chunks_mut(outer_chunk_size).enumerate() {
         let inner_chunk_size = ceil_divide(outer_chunk_size, num_inner_chunks);
@@ -294,8 +313,8 @@ fn main() {
             .for_each(|(inner_chunk_index, inner_chunk)| {
                 for i in 0..inner_chunk.len() {
                     let pixel_index = i + inner_chunk_index * inner_chunk_size + outer_chunk_index * outer_chunk_size;
-                    let x = (pixel_index % WIDTH) as f64;
-                    let y = (HEIGHT - pixel_index / WIDTH - 1) as f64;
+                    let x = (pixel_index % width) as f64;
+                    let y = (height - pixel_index / width - 1) as f64;
 
                     let mut radiance = Float3::zero();
 
@@ -320,8 +339,8 @@ fn main() {
                                 
                                 // Compute V
                                 let v = camera.direction
-                                    + cx * (((sx as f64 + 0.5 + dx) / 2.0 + x) / WIDTH as f64 - 0.5)
-                                    + cy * (((sy as f64 + 0.5 + dy) / 2.0 + y) / HEIGHT as f64 - 0.5);
+                                    + cx * (((sx as f64 + 0.5 + dx) / 2.0 + x) / width as f64 - 0.5)
+                                    + cy * (((sy as f64 + 0.5 + dy) / 2.0 + y) / height as f64 - 0.5);
 
                                 // Spawn a ray
                                 let ray = Ray {
@@ -341,14 +360,14 @@ fn main() {
         println!("Rendering ({} spp) {}%\r", num_samples * 4, outer_chunk_index);
     }
 
-    let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
-    let mut window = Window::new("smallpt in Rust", WIDTH, HEIGHT, WindowOptions::default())
+    let mut buffer: Vec<u32> = vec![0; width * height];
+    let mut window = Window::new("smallpt in Rust", width, args.height, WindowOptions::default())
         .unwrap_or_else(|e| {
             panic!("{}", e);
         });
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        for i in 0..WIDTH * HEIGHT {
+        for i in 0..width * height {
             let pixel = backbuffer[i];
             let color = tonemap(pixel);
             let r = (color.x * 255.0).round() as u32;
