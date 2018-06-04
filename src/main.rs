@@ -276,13 +276,13 @@ struct Opt {
 }
 
 fn main() {
-    let mut backbuffer = vec![Float3::zero(); args.width * args.height];
-
     // Fetch commandline arguments
     let args = Opt::from_args();
     let num_samples = (args.samples / 4).max(1);
     let width = args.width.max(1);
     let height = args.height.max(1);
+
+    let mut backbuffer = vec![Float3::zero(); args.width * args.height];
 
     let scene = build_scene();
 
