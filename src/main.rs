@@ -20,6 +20,7 @@ mod ray;
 mod rectangle;
 mod scene;
 mod sphere;
+mod triangle;
 
 use minifb::{Key, Window, WindowOptions};
 use bsdf::BSDF;
@@ -34,6 +35,7 @@ use scene::Scene;
 use sphere::Sphere;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use triangle::Triangle;
 
 type Float3 = cgmath::Vector3<f64>;
 
@@ -104,6 +106,15 @@ fn build_scene() -> Scene {
                 Material::new(Float3::new(12.0, 12.0, 12.0), Float3::zero(), BSDF::Diffuse),
             ),
         ],
+        // Triangles
+        vec![
+            // Triangle::new(
+            //     Float3::new(20.0, 10.5, 47.0),
+            //     Float3::new(20.0+32.0, 10.5, 47.0),
+            //     Float3::new(20.0, 10.5+32.0, 10.0),
+            //     Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Mirror),
+            // ),
+        ]
     )
 }
 
