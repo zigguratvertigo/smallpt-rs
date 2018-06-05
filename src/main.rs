@@ -358,6 +358,7 @@ fn main() {
     let num_samples = args.samples.max(1);
     let width = args.width.max(1);
     let height = args.height.max(1);
+    let accumulate = args.accumulate;
 
     let mut backbuffer = vec![Float3::new(0.5, 0.5, 0.5); args.width * args.height];
 
@@ -378,16 +379,36 @@ fn main() {
     render(&scene, &camera, width, height, num_samples, &mut backbuffer);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        for i in 0..width * height {
-            let color = saturate(tonemap(backbuffer[i]));
+        if accumulate { 
+            render(&scene, &camera, width, height, num_samples, &mut backbuffer); 
+            
+            for i in 0..width * height {
+                let prev_r = ((buffer[i] >> 16)& 0xFF) as f64 / 255.0; 
+                let prev_g = ((buffer[i] >> 8) & 0xFF) as f64 / 255.0; 
+                let prev_b = ((buffer[i] >> 0) & 0xFF) as f64 / 255.0; 
+                let prev_color = saturate(Float3::new(prev_r, prev_g, prev_b));                 
 
-            let r = (color.x * 255.0).round() as u32;
-            let g = (color.y * 255.0).round() as u32;
-            let b = (color.z * 255.0).round() as u32;
+                let mut color = saturate(tonemap(backbuffer[i]));
+                color = saturate(color.lerp(prev_color, 0.95)); 
 
-            buffer[i] = (r << 16) | (g << 8) | b;
+                let r = (color.x * 255.0).round() as u32;
+                let g = (color.y * 255.0).round() as u32;
+                let b = (color.z * 255.0).round() as u32;
+
+                buffer[i] = (r << 16) | (g << 8) | b;
+            }            
+        } else {
+            for i in 0..width * height {
+                let color = saturate(tonemap(backbuffer[i]));
+
+                let r = (color.x * 255.0).round() as u32;
+                let g = (color.y * 255.0).round() as u32;
+                let b = (color.z * 255.0).round() as u32;
+
+                buffer[i] = (r << 16) | (g << 8) | b;
+            }            
         }
 
-        window.update_with_buffer(&buffer).unwrap(); 
+        window.update_with_buffer(&buffer).unwrap();
     }
 }
