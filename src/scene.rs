@@ -69,7 +69,7 @@ impl Scene {
                 result = (s, hit_t);
 
                 let position = ray.origin + ray.direction * hit_t;
-                intersection_position =  position;//self.spheres[s].position;
+                intersection_position =  position;
 
                 intersection_normal = if Float3::dot(plane.normal, ray.direction) < 0.0 {
                     plane.normal
@@ -91,7 +91,7 @@ impl Scene {
                 result = (s, hit_t);
 
                 let position = ray.origin + ray.direction * hit_t;
-                intersection_position =  position;//self.spheres[s].position;
+                intersection_position =  position;
 
                 intersection_normal = if Float3::dot(rectangle.normal, ray.direction) < 0.0 {
                     rectangle.normal
@@ -113,7 +113,7 @@ impl Scene {
                 result = (s, hit_t);
 
                 let position = ray.origin + ray.direction * hit_t;
-                intersection_position =  position;//triangle.p0;//self.spheres[s].position;
+                intersection_position =  position;
 
                 intersection_normal = if Float3::dot(triangle.normal, ray.direction) < 0.0 {
                     triangle.normal
