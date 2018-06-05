@@ -13,7 +13,7 @@ readme = "README.md"
 rayon = "1.0"
 structopt = "0.2"
 cgmath = "0.16.1"
-rand = "*"
+rand = "0.5.0"
 num_cpus = "1.8.0"
 minifb = "0.10.6"
 #smallpt = { path = "../smallpt-rs" }
