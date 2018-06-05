@@ -11,7 +11,7 @@ pub struct Intersection {
 }
 
 impl Intersection {
-    // Spawn a new intersection data structure
+    // Spawn a new intersection result data structure
     pub fn new(position: Float3, normal: Float3, material: Material) -> Intersection {
         Intersection {
             position: position,
