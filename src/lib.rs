@@ -5,15 +5,10 @@ extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
 
-#[macro_use]
-extern crate structopt;
-
 use std::f64::consts::PI;
-
 use cgmath::prelude::*;
 use rayon::prelude::*;
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 type Float3 = cgmath::Vector3<f64>;
 
