@@ -1,9 +1,8 @@
 use ray::Ray;
-
 use material::Material;
 
-use cgmath::prelude::*;
 extern crate cgmath;
+use cgmath::prelude::*;
 type Float3 = cgmath::Vector3<f64>;
 
 #[derive(Copy, Clone)]

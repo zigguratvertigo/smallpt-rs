@@ -1,5 +1,4 @@
 use material::Material;
-use plane::Plane;
 use ray::Ray;
 
 use cgmath::prelude::*;

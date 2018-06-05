@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
+extern crate smallpt;
 extern crate cgmath;
 extern crate minifb;
 extern crate num_cpus;
@@ -12,30 +13,12 @@ extern crate structopt;
 
 use std::f64::consts::PI;
 
-mod bsdf;
-mod intersection;
-mod material;
-mod plane;
-mod ray;
-mod rectangle;
-mod scene;
-mod sphere;
-mod triangle;
-
+use smallpt::*;
 use minifb::{Key, Window, WindowOptions};
-use bsdf::BSDF;
 use cgmath::prelude::*;
-use intersection::Intersection;
-use material::Material;
-use plane::Plane;
-use ray::Ray;
 use rayon::prelude::*;
-use rectangle::Rectangle;
-use scene::Scene;
-use sphere::Sphere;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use triangle::Triangle;
 
 type Float3 = cgmath::Vector3<f64>;
 type Float2 = cgmath::Vector2<f64>;

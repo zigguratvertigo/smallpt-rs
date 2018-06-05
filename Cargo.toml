@@ -8,11 +8,17 @@ authors = ["Colin Barré-Brisebois <colinbb@gmail.com>"]
 categories = ["rendering"]
 repository = "https://github.com/zigguratvertigo/smallpt-rs"
 readme = "README.md"
+publish = false
 
 [dependencies]
-rand = "*"
-num_cpus = "1.8.0"
-cgmath = "0.16.1"
-minifb = "0.10.6"
 rayon = "1.0"
 structopt = "0.2"
+cgmath = "0.16.1"
+rand = "*"
+num_cpus = "1.8.0"
+minifb = "0.10.6"
+#smallpt = { path = "../smallpt-rs" }
+
+[[bin]]
+name = "example1"
+path = "examples/example1.rs"

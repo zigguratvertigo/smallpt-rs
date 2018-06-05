@@ -1,4 +1,3 @@
-use cgmath::prelude::*;
 extern crate cgmath;
 type Float3 = cgmath::Vector3<f64>;
 
