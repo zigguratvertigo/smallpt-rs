@@ -271,7 +271,7 @@ fn ceil_divide(dividend: usize, divisor: usize) -> usize {
 #[structopt(name = "smallpt", about = "A rust implementation of Kevin Beason's educational 100 lines small ray/pathtracer http://www.kevinbeason.com/smallpt/")]
 struct Opt {
     /// Set sample count
-    #[structopt(short = "s", long = "samples", default_value = "1")]
+    #[structopt(short = "s", long = "samples", default_value = "8")]
     samples: u32,
 
     /// Set final output width
@@ -281,35 +281,17 @@ struct Opt {
     /// Set final output height
     #[structopt(short = "h", long = "height", default_value = "512")]
     height: usize,
+
+    /// Accumulate results over multiple frames
+    #[structopt(short = "a", long = "accumulate")]
+    accumulate: bool,
 }
 
-fn main() {
-    // Fetch commandline arguments
-    let args = Opt::from_args();
-    let num_samples = args.samples.max(1);
-    let width = args.width.max(1);
-    let height = args.height.max(1);
-
-    let mut backbuffer = vec![Float3::new(0.5, 0.5, 0.5); args.width * args.height];
-
-    let scene = build_scene();
-
-    let camera = Ray {
-        origin: Float3::new(50.0, 50.0, 300.0),
-        direction: Float3::new(0.0, -0.05, -1.0).normalize(),
-    };
-
+fn render(scene: &Scene, camera: &Ray, width: usize, height: usize, num_samples: u32, backbuffer: &mut [Float3]) {
     let aperture = 0.5135;
     let cx = Float3::new(width as f64 * aperture / height as f64, 0.0, 0.0);
     let cy = cx.cross(camera.direction).normalize() * aperture;
-
-    let mut buffer: Vec<u32> = vec![0x00AAAAAA; width * height];
-    let mut window = Window::new("smallpt in Rust", width, args.height, WindowOptions::default())
-        .unwrap_or_else(|e| {
-            panic!("{}", e);
-        });
-   
-
+    
     // Split the work
     let num_cpus = num_cpus::get();
     let num_inner_chunks = num_cpus * num_cpus;
@@ -368,6 +350,32 @@ fn main() {
         
         println!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
     }
+}
+
+fn main() {
+    // Fetch commandline arguments
+    let args = Opt::from_args();
+    let num_samples = args.samples.max(1);
+    let width = args.width.max(1);
+    let height = args.height.max(1);
+
+    let mut backbuffer = vec![Float3::new(0.5, 0.5, 0.5); args.width * args.height];
+
+    let scene = build_scene();
+
+    let camera = Ray {
+        origin: Float3::new(50.0, 50.0, 300.0),
+        direction: Float3::new(0.0, -0.05, -1.0).normalize(),
+    };
+
+    let mut buffer: Vec<u32> = vec![0x00AAAAAA; width * height];
+    let mut window = Window::new("smallpt in Rust", width, args.height, WindowOptions::default())
+        .unwrap_or_else(|e| {
+            panic!("{}", e);
+        });
+   
+    // Render
+    render(&scene, &camera, width, height, num_samples, &mut backbuffer);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         for i in 0..width * height {
