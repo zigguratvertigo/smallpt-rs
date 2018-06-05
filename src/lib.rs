@@ -1,7 +1,6 @@
 #![allow(unused_imports)]
 
 extern crate cgmath;
-extern crate minifb;
 extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
@@ -11,7 +10,6 @@ extern crate structopt;
 
 use std::f64::consts::PI;
 
-use minifb::{Key, Window, WindowOptions};
 use cgmath::prelude::*;
 use rayon::prelude::*;
 use std::path::PathBuf;
