@@ -2,7 +2,7 @@
 name = "smallpt"
 version = "0.1.1"
 license = "MIT"
-description = "A rust on a small ray/pathtracer, inspired from Kevin Beason's educational 99-lines ray/pathtracer (http://www.kevinbeason.com/smallpt/)"
+description = "A small ray/pathtracer in Rust, inspired by Kevin Beason's educational 99-lines ray/pathtracer (http://www.kevinbeason.com/smallpt/)"
 keywords = ["raytracer", "raytracing", "ray-tracing", "path-tracer"]
 authors = ["Colin Barré-Brisebois <colinbb@gmail.com>"]
 categories = ["rendering"]
@@ -10,7 +10,7 @@ repository = "https://github.com/zigguratvertigo/smallpt-rs"
 readme = "README.md"
 
 [badges]
-travis-ci = { repository = "https://travis-ci.com/zigguratvertigo/smallpt-rs", branch = "master" }
+travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
