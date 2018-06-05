@@ -27,16 +27,18 @@ fn build_scene() -> Scene {
     Scene::new(
         // Spheres
         vec![
+            // Mirror
             Sphere::new(
                 16.5,
                 Float3::new(27.0, 16.5, 47.0),
                 Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Mirror),
-            ), //Mirror
+            ), 
+            // Glass
             Sphere::new(
                 16.5,
                 Float3::new(73.0, 16.5, 78.0),
                 Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Glass),
-            ), //Glass
+            ), 
         ],
         // Planes
         vec![
@@ -296,7 +298,7 @@ fn render(scene: &Scene, camera: &Ray, width: usize, height: usize, num_samples:
 
                     let mut radiance = Float3::zero();
 
-                    // Samples per subpixel
+                    // Samples per pixel
                     for _ in 0..num_samples {
 
                         // jitter for AA
