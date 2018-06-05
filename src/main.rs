@@ -38,6 +38,7 @@ use structopt::StructOpt;
 use triangle::Triangle;
 
 type Float3 = cgmath::Vector3<f64>;
+type Float2 = cgmath::Vector2<f64>;
 
 fn build_scene() -> Scene {
     Scene::new(
@@ -226,8 +227,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                             transmitted_dir.dot(normal)
                         };
 
-                        let reflectance =
-                            base_reflectance + (1.0 - base_reflectance) * c * c * c * c * c;
+                        let reflectance = base_reflectance + (1.0 - base_reflectance) * c * c * c * c * c;
                         let transmittance = 1.0 - reflectance;
                         let rr_propability = 0.25 + 0.5 * reflectance;
                         let reflectance_propability = reflectance / rr_propability;
@@ -236,16 +236,13 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                         if depth > 1 {
                             // Russian roulette between reflectance and transmittance
                             if rand::random::<f64>() < rr_propability {
-                                compute_radiance(reflection, scene, depth + 1)
-                                    * reflectance_propability
+                                compute_radiance(reflection, scene, depth + 1) * reflectance_propability
                             } else {
-                                compute_radiance(transmitted_ray, scene, depth + 1)
-                                    * transmittance_propability
+                                compute_radiance(transmitted_ray, scene, depth + 1) * transmittance_propability
                             }
                         } else {
                             compute_radiance(reflection, scene, depth + 1) * reflectance
-                                + compute_radiance(transmitted_ray, scene, depth + 1)
-                                    * transmittance
+                                + compute_radiance(transmitted_ray, scene, depth + 1) * transmittance
                         }
                     }
                 }
@@ -274,7 +271,7 @@ fn ceil_divide(dividend: usize, divisor: usize) -> usize {
 #[structopt(name = "smallpt", about = "A rust implementation of Kevin Beason's educational 100 lines small ray/pathtracer http://www.kevinbeason.com/smallpt/")]
 struct Opt {
     /// Set sample count
-    #[structopt(short = "s", long = "samples", default_value = "32")]
+    #[structopt(short = "s", long = "samples", default_value = "1")]
     samples: u32,
 
     /// Set final output width
@@ -289,11 +286,11 @@ struct Opt {
 fn main() {
     // Fetch commandline arguments
     let args = Opt::from_args();
-    let num_samples = (args.samples / 4).max(1);
+    let num_samples = args.samples.max(1);
     let width = args.width.max(1);
     let height = args.height.max(1);
 
-    let mut backbuffer = vec![Float3::zero(); args.width * args.height];
+    let mut backbuffer = vec![Float3::new(0.5, 0.5, 0.5); args.width * args.height];
 
     let scene = build_scene();
 
@@ -305,6 +302,13 @@ fn main() {
     let aperture = 0.5135;
     let cx = Float3::new(width as f64 * aperture / height as f64, 0.0, 0.0);
     let cy = cx.cross(camera.direction).normalize() * aperture;
+
+    let mut buffer: Vec<u32> = vec![0x00AAAAAA; width * height];
+    let mut window = Window::new("smallpt in Rust", width, args.height, WindowOptions::default())
+        .unwrap_or_else(|e| {
+            panic!("{}", e);
+        });
+   
 
     // Split the work
     let num_cpus = num_cpus::get();
@@ -327,58 +331,48 @@ fn main() {
 
                     let mut radiance = Float3::zero();
 
-                    // Sample 2x2 subpixels
-                    for sy in 0..2 {
-                        for sx in 0..2 {
-                            // Samples per subpixel
-                            for _ in 0..num_samples {
-                                // jitter for AA
-                                let r1: f64 = 2.0 * rand::random::<f64>();
-                                let dx = if r1 < 1.0 {
-                                    r1.sqrt() - 1.0
-                                } else {
-                                    1.0 - (2.0 - r1).sqrt()
-                                };
-                                let r2: f64 = 2.0 * rand::random::<f64>();
-                                let dy = if r2 < 1.0 {
-                                    r2.sqrt() - 1.0
-                                } else {
-                                    1.0 - (2.0 - r2).sqrt()
-                                };
-                                
-                                // Compute V
-                                let v = camera.direction
-                                    + cx * (((sx as f64 + 0.5 + dx) / 2.0 + x) / width as f64 - 0.5)
-                                    + cy * (((sy as f64 + 0.5 + dy) / 2.0 + y) / height as f64 - 0.5);
+                    // Samples per subpixel
+                    for _ in 0..num_samples {
 
-                                // Spawn a ray
-                                let ray = Ray {
-                                    origin: camera.origin + v * 100.0,
-                                    direction: v.normalize(),
-                                };
+                        // jitter for AA
+                        let r1: f64 = 2.0 * rand::random::<f64>();
+                        let dx = if r1 < 1.0 {
+                            r1.sqrt() - 1.0
+                        } else {
+                            1.0 - (2.0 - r1).sqrt()
+                        };
+                        let r2: f64 = 2.0 * rand::random::<f64>();
+                        let dy = if r2 < 1.0 {
+                            r2.sqrt() - 1.0
+                        } else {
+                            1.0 - (2.0 - r2).sqrt()
+                        };
+                        
+                        // Compute V
+                        let v = camera.direction
+                            + cx * (((0.5 + dx) / 2.0 + x) / width as f64 - 0.5)
+                            + cy * (((0.5 + dy) / 2.0 + y) / height as f64 - 0.5);
 
-                                radiance += compute_radiance(ray, &scene, 0);
-                            }
-                        }
+                        // Spawn a ray
+                        let ray = Ray {
+                            origin: camera.origin + v * 100.0,
+                            direction: v.normalize(),
+                        };
+
+                        radiance += compute_radiance(ray, &scene, 0);
                     }
 
-                    inner_chunk[i] = radiance / (2.0 * 2.0 * num_samples as f64);
+                    inner_chunk[i] = radiance / (num_samples as f64);
                 }
             });
         
-        println!("Rendering ({} spp) {}%\r", num_samples * 4, outer_chunk_index);
+        println!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
     }
-
-    let mut buffer: Vec<u32> = vec![0; width * height];
-    let mut window = Window::new("smallpt in Rust", width, args.height, WindowOptions::default())
-        .unwrap_or_else(|e| {
-            panic!("{}", e);
-        });
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         for i in 0..width * height {
-            let pixel = backbuffer[i];
-            let color = tonemap(pixel);
+            let color = saturate(tonemap(backbuffer[i]));
+
             let r = (color.x * 255.0).round() as u32;
             let g = (color.y * 255.0).round() as u32;
             let b = (color.z * 255.0).round() as u32;
@@ -386,6 +380,6 @@ fn main() {
             buffer[i] = (r << 16) | (g << 8) | b;
         }
 
-        window.update_with_buffer(&buffer).unwrap();
+        window.update_with_buffer(&buffer).unwrap(); 
     }
 }
