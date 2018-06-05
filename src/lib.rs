@@ -18,7 +18,6 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 type Float3 = cgmath::Vector3<f64>;
-type Float2 = cgmath::Vector2<f64>;
 
 pub mod plane;
 pub mod rectangle;
