@@ -1,3 +1,5 @@
+use Traceable;
+use Hit;
 use ray::Ray;
 use material::Material;
 
@@ -21,14 +23,16 @@ impl Plane {
             material: material,
         }
     }
+}
 
+impl Traceable for Plane {
     // Ray-Plane Intersection
-    pub fn intersect(self, ray: Ray) -> f64 {
+    fn intersect(&self, r: &Ray) -> f64 {
         let plane_normal = -self.normal;
-        let denom = plane_normal.dot(ray.direction);
+        let denom = plane_normal.dot(r.direction);
 
         if denom > 1e-6 {
-            plane_normal.dot(self.position - ray.origin) / denom
+            plane_normal.dot(self.position - r.origin) / denom
         } else {
             0.0
         }

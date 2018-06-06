@@ -1,3 +1,4 @@
+use Traceable;
 use material::Material;
 use ray::Ray;
 
@@ -30,9 +31,11 @@ impl Triangle {
             material: material,
         }
     }
+}
 
+impl Traceable for Triangle {
     // Ray-Triangle Intersection
-    pub fn intersect(self, r: Ray) -> f64 {
+    fn intersect(&self, r: &Ray) -> f64 {
         let p0p1 = self.p1 - self.p0;
         let p0p2 = self.p2 - self.p0;
         let pvec = r.direction.cross(p0p2);

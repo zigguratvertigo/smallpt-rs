@@ -1,4 +1,5 @@
 use std;
+use Traceable;
 
 use cgmath::prelude::*;
 extern crate cgmath;
@@ -23,9 +24,10 @@ impl Sphere {
             material: material,
         }
     }
+}
 
-    // Ray-Sphere Intersection
-    pub fn intersect(self, ray: Ray) -> f64 {
+impl Traceable for Sphere {
+    fn intersect(&self, ray: &Ray) -> f64 {
         let op: Float3 = self.position - ray.origin;
         let b: f64 = op.dot(ray.direction);
         let det_sqrd: f64 = b * b - op.dot(op) + self.radius * self.radius;

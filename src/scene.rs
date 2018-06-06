@@ -1,5 +1,6 @@
+use Traceable;
 use bsdf::BSDF;
-use intersection::Intersection;
+use hit::Hit;
 use material::Material;
 use plane::Plane;
 use ray::Ray;
@@ -21,6 +22,25 @@ pub struct Scene {
 }
 
 impl Scene {
+
+    // refactor: single Traceable type
+
+    pub fn add_sphere(mut self, sphere: Sphere) {
+        self.spheres.push(sphere);
+    }
+
+    pub fn add_plane(mut self, plane: Plane) {
+        self.planes.push(plane);
+    }
+
+    pub fn add_rectangle(mut self, rectangle: Rectangle) {
+        self.rectangles.push(rectangle);
+    }
+
+    pub fn add_triangle(mut self, triangle: Triangle) {
+        self.triangles.push(triangle);
+    }
+
     pub fn new(spheres: Vec<Sphere>, planes: Vec<Plane>, rectangles: Vec<Rectangle>, triangles: Vec<Triangle>) -> Scene {
         Scene {
             spheres: spheres,
@@ -30,7 +50,7 @@ impl Scene {
         }
     }
 
-    pub fn intersect(&self, ray: Ray) -> Option<(Intersection, f64)> {
+    pub fn intersect(&self, ray: Ray) -> Option<(Hit, f64)> {
         let mut result = (0, std::f64::INFINITY);
         let mut intersection_position = Float3::zero();
         let mut intersection_normal = Float3::zero();
@@ -39,7 +59,7 @@ impl Scene {
         // Intersect Spheres
         for s in 0..self.spheres.len() {
             let sphere = &self.spheres[s];
-            let hit_t = sphere.intersect(ray);
+            let hit_t = sphere.intersect(&ray);
             let (_, prev_t) = result;
 
             if hit_t < prev_t && hit_t > 1e-6 {
@@ -62,7 +82,7 @@ impl Scene {
         // Intersect Planes
         for s in 0..self.planes.len() {
             let plane = &self.planes[s];
-            let hit_t = plane.intersect(ray);
+            let hit_t = plane.intersect(&ray);
             let (_, prev_t) = result;
 
             if hit_t < prev_t && hit_t > 1e-6 {
@@ -84,7 +104,7 @@ impl Scene {
         // Intersect Rectangles
         for s in 0..self.rectangles.len() {
             let rectangle = &self.rectangles[s];
-            let hit_t = rectangle.intersect(ray);
+            let hit_t = rectangle.intersect(&ray);
             let (_, prev_t) = result;
 
             if hit_t < prev_t && hit_t > 1e-6 {
@@ -106,7 +126,7 @@ impl Scene {
         // Intersect Triangles
         for s in 0..self.triangles.len() {
             let triangle = &self.triangles[s];
-            let hit_t = triangle.intersect(ray);
+            let hit_t = triangle.intersect(&ray);
             let (_, prev_t) = result;
 
             if hit_t < prev_t && hit_t > 1e-6 {
@@ -128,7 +148,7 @@ impl Scene {
         let (_, hit_t) = result;
         if hit_t != std::f64::INFINITY {
             Some((
-                Intersection::new(
+                Hit::new(
                     intersection_position,
                     intersection_normal,
                     intersection_material,

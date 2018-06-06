@@ -18,7 +18,7 @@ pub mod sphere;
 pub mod triangle;
 pub mod ray;
 pub mod scene;
-pub mod intersection;
+pub mod hit;
 pub mod bsdf;
 pub mod material;
 
@@ -28,9 +28,13 @@ pub use sphere::*;
 pub use triangle::*;
 pub use ray::*;
 pub use scene::*;
-pub use intersection::*;
+pub use hit::*;
 pub use bsdf::*;
 pub use material::*;
+
+trait Traceable : Send + Sync {
+    fn intersect(&self, ray: &Ray) -> f64;
+}
 
 pub fn trace(scene: &Scene, camera: &Ray, width: usize, height: usize, num_samples: u32, backbuffer: &mut [Float3]) {
     let aperture = 0.5135;
@@ -102,24 +106,24 @@ fn luminance(color: Float3) -> f64 {
 }
 
 fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
-    let intersect: Option<(Intersection, f64)> = scene.intersect(ray);
+    let intersect: Option<(Hit, f64)> = scene.intersect(ray);
 
     match intersect {
         None => Float3::zero(),
-        Some((intersection, t)) => {
+        Some((hit, t)) => {
             let position = ray.origin + ray.direction * t;
-            let normal = intersection.normal;
+            let normal = hit.normal;
 
-            let mut f = intersection.material.albedo;
+            let mut f = hit.material.albedo;
             if depth > 3 {
                 if rand::random::<f64>() < luminance(f) && depth < 100 {
                     f = f / luminance(f);
                 } else {
-                    return intersection.material.emission;
+                    return hit.material.emission;
                 }
             }
 
-            let irradiance: Float3 = match intersection.material.bsdf {
+            let irradiance: Float3 = match hit.material.bsdf {
                 // Diffuse Reflection
                 BSDF::Diffuse => {
                     // Sample cosine distribution and transform into world tangent space
@@ -209,9 +213,9 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
             };
 
             return Float3::new(
-                irradiance.x * f.x + intersection.material.emission.x,
-                irradiance.y * f.y + intersection.material.emission.y,
-                irradiance.z * f.z + intersection.material.emission.z,
+                irradiance.x * f.x + hit.material.emission.x,
+                irradiance.y * f.y + hit.material.emission.y,
+                irradiance.z * f.z + hit.material.emission.z,
             );
         }
     }

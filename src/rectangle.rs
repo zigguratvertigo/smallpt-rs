@@ -1,3 +1,4 @@
+use Traceable;
 use material::Material;
 use plane::Plane;
 use ray::Ray;
@@ -38,9 +39,11 @@ impl Rectangle {
             material: material,
         }
     }
+}
 
+impl Traceable for Rectangle {
     // Ray-Rectangle Intersection
-    pub fn intersect(self, r: Ray) -> f64 {
+    fn intersect(&self, r: &Ray) -> f64 {
         let rectangle_plane = Plane::new(self.position, self.normal, self.material);
         let intersect_plane_t = rectangle_plane.intersect(r);
 
