@@ -14,7 +14,7 @@ travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
 
 [dependencies]
 rayon = "1.0"
-structopt = "=0.2.8"
+structopt = "0.2"
 cgmath = "0.16.1"
 rand = "0.5.0"
 num_cpus = "1.8.0"
