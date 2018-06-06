@@ -13,7 +13,7 @@ use cgmath::prelude::*;
 extern crate cgmath;
 type Float3 = cgmath::Vector3<f64>;
 
-//#[derive(Copy, Clone)]
+#[derive(Default)]
 pub struct Scene {
     pub spheres: Vec<Sphere>,
     pub planes: Vec<Plane>,
@@ -25,20 +25,24 @@ impl Scene {
 
     // refactor: single Traceable type
 
-    pub fn add_sphere(mut self, sphere: Sphere) {
+    pub fn add_sphere(&mut self, sphere: Sphere) {
         self.spheres.push(sphere);
     }
 
-    pub fn add_plane(mut self, plane: Plane) {
+    pub fn add_plane(&mut self, plane: Plane) {
         self.planes.push(plane);
     }
 
-    pub fn add_rectangle(mut self, rectangle: Rectangle) {
+    pub fn add_rectangle(&mut self, rectangle: Rectangle) {
         self.rectangles.push(rectangle);
     }
 
-    pub fn add_triangle(mut self, triangle: Triangle) {
+    pub fn add_triangle(&mut self, triangle: Triangle) {
         self.triangles.push(triangle);
+    }
+
+    pub fn init() -> Scene {
+        Scene::new(vec![], vec![], vec![], vec![] )
     }
 
     pub fn new(spheres: Vec<Sphere>, planes: Vec<Plane>, rectangles: Vec<Rectangle>, triangles: Vec<Triangle>) -> Scene {

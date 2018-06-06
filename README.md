@@ -7,11 +7,137 @@ Inspired by [Kevin Beason's educational 99-line raytracer/pathtracer](http://www
 
 ![alt text](https://github.com/zigguratvertigo/smallpt-rs/blob/master/smallpt.png)
 
-## External Dependencies
-smallpt-rs relies on the following [crates](https://crates.io):
-- [rand](https://crates.io/crates/rand): library for random number generation
-- [cgmath](https://crates.io/crates/cgmath): linear algebra and mathematics library for computer graphics
-- [num_cpus](https://crates.io/crates/num_cpus): count the number of CPUs on the current machine
-- [minifb](https://crates.io/crates/minifb): Cross-platform window setup with optional bitmap rendering
-- [rayon](https://crates.io/crates/rayon): data-parallelism library for Rust
-- [structopt](https://crates.io/crates/structopt): parse command line argument by defining a struct.
+Usage
+-----
+
+```toml
+# Cargo.toml
+[dependencies]
+smallpt = "0.1.4"
+```
+
+Example (with minifb)
+-------
+
+```rust
+extern crate smallpt;
+extern crate minifb;
+
+use smallpt::*;
+use minifb::{Key, Window, WindowOptions};
+
+fn main() {
+    let num_samples = 16;
+    let width = 512;
+    let height = 512;
+
+    let mut backbuffer = vec![Float3::zero(); width * height];
+
+    let mut scene: Scene = Scene::init();
+
+    // Spheres
+    scene.add_sphere(Sphere::new(
+        16.5,
+        Float3::new(27.0, 16.5, 47.0),
+        Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Mirror),
+    ));
+    scene.add_sphere(Sphere::new(
+        16.5,
+        Float3::new(73.0, 16.5, 78.0),
+        Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Glass),
+    ));
+
+    // Walls
+    scene.add_plane(Plane::new(
+        Float3::new(0.0, 0.0, 0.0),
+        Float3::new(0.0, 1.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+    ));
+    scene.add_plane(Plane::new(
+        Float3::new(1.0, 0.0, 0.0),
+        Float3::new(1.0, 0.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.25, 0.25), BSDF::Diffuse),
+    ));
+    scene.add_plane(Plane::new(
+        Float3::new(99.0, 0.0, 0.0),
+        Float3::new(-1.0, 0.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.25, 0.25, 0.75), BSDF::Diffuse),
+    ));
+    scene.add_plane(Plane::new(
+        Float3::new(0.0, 0.0, 0.0),
+        Float3::new(0.0, 0.0, 1.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+    ));
+    scene.add_plane(Plane::new(
+        Float3::new(0.0, 0.0, 170.0),
+        Float3::new(0.0, 0.0, -1.0),
+        Material::new(Float3::zero(), Float3::zero(), BSDF::Diffuse),
+    ));
+    scene.add_plane(Plane::new(
+        Float3::new(0.0, 81.6, 0.0),
+        Float3::new(0.0, -1.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+    ));
+
+    // Light (emissive rectangle)
+    scene.add_rectangle(Rectangle::new(
+        Float3::new(50.0, 81.5, 50.0),
+        Float3::new(0.0, -1.0, 0.0),
+        Float3::new(1.0, 0.0, 0.0),
+        Float3::new(0.0, 0.0, 1.0),
+        33.0,
+        33.0,
+        Material::new(Float3::new(12.0, 12.0, 12.0), Float3::zero(), BSDF::Diffuse),
+    ));
+
+    let camera = Ray {
+        origin: Float3::new(50.0, 50.0, 300.0),
+        direction: Float3::new(0.0, -0.05, -1.0).normalize(),
+    };
+
+    let mut buffer: Vec<u32> = vec![0; width * height];
+    let mut window = Window::new("smallpt in Rust", width, height, WindowOptions::default())
+        .unwrap_or_else(|e| {
+            panic!("{}", e);
+        });
+
+    // Render
+    trace(&scene, &camera, width, height, num_samples, &mut backbuffer);
+
+    while window.is_open() && !window.is_key_down(Key::Escape) {
+        for i in 0..width * height {
+            let color = saturate(tonemap(backbuffer[i]));
+
+            let r = (color.x * 255.0).round() as u32;
+            let g = (color.y * 255.0).round() as u32;
+            let b = (color.z * 255.0).round() as u32;
+
+            buffer[i] = (r << 16) | (g << 8) | b;
+        }
+
+        window.update_with_buffer(&buffer).unwrap();
+    }
+}
+
+fn saturate(color: Float3) -> Float3 {
+    Float3 {
+        x: color.x.max(0.0).min(1.0),
+        y: color.y.max(0.0).min(1.0),
+        z: color.z.max(0.0).min(1.0),
+    }
+}
+
+fn tonemap(color: Float3) -> Float3 {
+    let color_linear = Float3::new(
+        color.x.powf(1.0 / 2.2),
+        color.y.powf(1.0 / 2.2),
+        color.z.powf(1.0 / 2.2),
+    );
+
+    return saturate(color_linear);
+}
+```
+
+Status
+------
+Code is still quite in flux, being refined on a weekly basis. More simplification and changes coming soon.

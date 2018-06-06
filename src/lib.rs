@@ -6,11 +6,11 @@ extern crate rand;
 extern crate rayon;
 
 use std::f64::consts::PI;
-use cgmath::prelude::*;
 use rayon::prelude::*;
 use std::path::PathBuf;
 
 pub type Float3 = cgmath::Vector3<f64>;
+pub use cgmath::prelude::*;
 
 pub mod plane;
 pub mod rectangle;
@@ -228,4 +228,24 @@ fn ceil_divide(dividend: usize, divisor: usize) -> usize {
     } else {
         division + 1
     }
+}
+
+// todo: remove me later
+
+pub fn saturate(color: Float3) -> Float3 {
+    Float3 {
+        x: color.x.max(0.0).min(1.0),
+        y: color.y.max(0.0).min(1.0),
+        z: color.z.max(0.0).min(1.0),
+    }
+}
+
+pub fn tonemap(color: Float3) -> Float3 {
+    let color_linear = Float3::new(
+        color.x.powf(1.0 / 2.2),
+        color.y.powf(1.0 / 2.2),
+        color.z.powf(1.0 / 2.2),
+    );
+
+    return saturate(color_linear);
 }
