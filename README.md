@@ -118,24 +118,6 @@ fn main() {
         window.update_with_buffer(&buffer).unwrap();
     }
 }
-
-fn saturate(color: Float3) -> Float3 {
-    Float3 {
-        x: color.x.max(0.0).min(1.0),
-        y: color.y.max(0.0).min(1.0),
-        z: color.z.max(0.0).min(1.0),
-    }
-}
-
-fn tonemap(color: Float3) -> Float3 {
-    let color_linear = Float3::new(
-        color.x.powf(1.0 / 2.2),
-        color.y.powf(1.0 / 2.2),
-        color.z.powf(1.0 / 2.2),
-    );
-
-    return saturate(color_linear);
-}
 ```
 
 Status
