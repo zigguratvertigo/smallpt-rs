@@ -1,4 +1,5 @@
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+[![Crates.io](https://img.shields.io/crates/v/smallpt.svg)](https://crates.io/crates/smallpt)
 [![Build Status](https://travis-ci.org/zigguratvertigo/smallpt-rs.svg?branch=master)](https://travis-ci.org/zigguratvertigo/smallpt-rs)
 
 A [Rust](https://www.rust-lang.org/) implementation of a small ray/pathtracer.
