@@ -10,7 +10,7 @@ use cgmath::prelude::*;
 use rayon::prelude::*;
 use std::path::PathBuf;
 
-type Float3 = cgmath::Vector3<f64>;
+pub type Float3 = cgmath::Vector3<f64>;
 
 pub mod plane;
 pub mod rectangle;
