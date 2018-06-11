@@ -5,42 +5,49 @@ extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
 
-use std::f64::consts::PI;
 use rayon::prelude::*;
+use std::f64::consts::PI;
 use std::path::PathBuf;
 
 pub type Float3 = cgmath::Vector3<f64>;
 pub use cgmath::prelude::*;
 
+pub mod bsdf;
+pub mod hit;
+pub mod material;
 pub mod plane;
+pub mod ray;
 pub mod rectangle;
+pub mod scene;
 pub mod sphere;
 pub mod triangle;
-pub mod ray;
-pub mod scene;
-pub mod hit;
-pub mod bsdf;
-pub mod material;
 
+pub use bsdf::*;
+pub use hit::*;
+pub use material::*;
 pub use plane::*;
+pub use ray::*;
 pub use rectangle::*;
+pub use scene::*;
 pub use sphere::*;
 pub use triangle::*;
-pub use ray::*;
-pub use scene::*;
-pub use hit::*;
-pub use bsdf::*;
-pub use material::*;
 
-trait Traceable : Send + Sync {
-    fn intersect(&self, ray: &Ray) -> f64;
+pub trait Traceable: Send + Sync {
+    fn intersect(&self, ray: &Ray, result: &mut Hit) -> bool;
 }
 
-pub fn trace(scene: &Scene, camera: &Ray, width: usize, height: usize, num_samples: u32, backbuffer: &mut [Float3]) {
+pub fn trace(
+    scene: &Scene,
+    camera: &Ray,
+    width: usize,
+    height: usize,
+    num_samples: u32,
+    backbuffer: &mut [Float3],
+) {
     let aperture = 0.5135;
     let cx = Float3::new(width as f64 * aperture / height as f64, 0.0, 0.0);
     let cy = cx.cross(camera.direction).normalize() * aperture;
-    
+
     // Split the work
     let num_cpus = num_cpus::get();
     let num_inner_chunks = num_cpus * num_cpus;
@@ -56,7 +63,9 @@ pub fn trace(scene: &Scene, camera: &Ray, width: usize, height: usize, num_sampl
             .enumerate()
             .for_each(|(inner_chunk_index, inner_chunk)| {
                 for i in 0..inner_chunk.len() {
-                    let pixel_index = i + inner_chunk_index * inner_chunk_size + outer_chunk_index * outer_chunk_size;
+                    let pixel_index = i
+                        + inner_chunk_index * inner_chunk_size
+                        + outer_chunk_index * outer_chunk_size;
                     let x = (pixel_index % width) as f64;
                     let y = (height - pixel_index / width - 1) as f64;
 
@@ -64,7 +73,6 @@ pub fn trace(scene: &Scene, camera: &Ray, width: usize, height: usize, num_sampl
 
                     // Samples per pixel
                     for _ in 0..num_samples {
-
                         // Jitter for AA
                         let r1: f64 = 2.0 * rand::random::<f64>();
                         let dx = if r1 < 1.0 {
@@ -78,7 +86,7 @@ pub fn trace(scene: &Scene, camera: &Ray, width: usize, height: usize, num_sampl
                         } else {
                             1.0 - (2.0 - r2).sqrt()
                         };
-                        
+
                         // Compute V
                         let v = camera.direction
                             + cx * (((0.5 + dx) / 2.0 + x) / width as f64 - 0.5)
@@ -96,7 +104,7 @@ pub fn trace(scene: &Scene, camera: &Ray, width: usize, height: usize, num_sampl
                     inner_chunk[i] = radiance / (num_samples as f64);
                 }
             });
-        
+
         println!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
     }
 }
@@ -106,13 +114,13 @@ fn luminance(color: Float3) -> f64 {
 }
 
 fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
-    let intersect: Option<(Hit, f64)> = scene.intersect(ray);
+    let intersect: Option<Hit> = scene.intersect(ray);
 
     match intersect {
         None => Float3::zero(),
-        Some((hit, t)) => {
-            let position = ray.origin + ray.direction * t;
-            let normal = hit.normal;
+        Some(hit) => {
+            let position = ray.origin + ray.direction * hit.t;
+            let normal = hit.n;
 
             let mut f = hit.material.albedo;
             if depth > 3 {
@@ -138,7 +146,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
 
                     let tangent = normal.cross(w_up).normalize();
                     let bitangent = normal.cross(tangent).normalize();
-                    let next_direction = tangent * r1.cos() * r2s 
+                    let next_direction = tangent * r1.cos() * r2s
                         + bitangent * r1.sin() * r2s
                         + normal * (1.0 - r2).sqrt();
 
@@ -175,11 +183,10 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                         // Total internal reflection
                         compute_radiance(reflection, scene, depth + 1)
                     } else {
-                        let transmitted_dir =
-                            (ray.direction * nnt
-                                - normal
-                                    * (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
-                                .normalize();
+                        let transmitted_dir = (ray.direction * nnt
+                            - normal
+                                * (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
+                            .normalize();
                         let transmitted_ray = Ray::new(position, transmitted_dir);
 
                         let a = nt - nc;
@@ -191,7 +198,8 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                             transmitted_dir.dot(normal)
                         };
 
-                        let reflectance = base_reflectance + (1.0 - base_reflectance) * c * c * c * c * c;
+                        let reflectance =
+                            base_reflectance + (1.0 - base_reflectance) * c * c * c * c * c;
                         let transmittance = 1.0 - reflectance;
                         let rr_propability = 0.25 + 0.5 * reflectance;
                         let reflectance_propability = reflectance / rr_propability;
@@ -200,13 +208,16 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                         if depth > 1 {
                             // Russian roulette between reflectance and transmittance
                             if rand::random::<f64>() < rr_propability {
-                                compute_radiance(reflection, scene, depth + 1) * reflectance_propability
+                                compute_radiance(reflection, scene, depth + 1)
+                                    * reflectance_propability
                             } else {
-                                compute_radiance(transmitted_ray, scene, depth + 1) * transmittance_propability
+                                compute_radiance(transmitted_ray, scene, depth + 1)
+                                    * transmittance_propability
                             }
                         } else {
                             compute_radiance(reflection, scene, depth + 1) * reflectance
-                                + compute_radiance(transmitted_ray, scene, depth + 1) * transmittance
+                                + compute_radiance(transmitted_ray, scene, depth + 1)
+                                    * transmittance
                         }
                     }
                 }

@@ -1,107 +1,97 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
-extern crate smallpt;
 extern crate cgmath;
 extern crate minifb;
 extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
+extern crate smallpt;
 
 #[macro_use]
 extern crate structopt;
 
-use std::f64::consts::PI;
-
-use smallpt::*;
-use minifb::{Key, Window, WindowOptions};
 use cgmath::prelude::*;
+use minifb::{Key, Window, WindowOptions};
 use rayon::prelude::*;
+use smallpt::*;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-// type Float3 = cgmath::Vector3<f64>;
-// type Float2 = cgmath::Vector2<f64>;
-
 fn build_scene() -> Scene {
-    Scene::new(
-        // Spheres
-        vec![
-            // Mirror
-            Sphere::new(
-                16.5,
-                Float3::new(27.0, 16.5, 47.0),
-                Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Mirror),
-            ), 
-            // Glass
-            Sphere::new(
-                16.5,
-                Float3::new(73.0, 16.5, 78.0),
-                Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Glass),
-            ), 
-        ],
-        // Planes
-        vec![
-            // Bottom
-            Plane::new(
-                Float3::new(0.0, 0.0, 0.0),
-                Float3::new(0.0, 1.0, 0.0),
-                Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
-            ),
-            // Left
-            Plane::new(
-                Float3::new(1.0, 0.0, 0.0),
-                Float3::new(1.0, 0.0, 0.0),
-                Material::new(Float3::zero(), Float3::new(0.75, 0.25, 0.25), BSDF::Diffuse),
-            ),
-            // Right
-            Plane::new(
-                Float3::new(99.0, 0.0, 0.0),
-                Float3::new(-1.0, 0.0, 0.0),
-                Material::new(Float3::zero(), Float3::new(0.25, 0.25, 0.75), BSDF::Diffuse),
-            ),
-            // Front
-            Plane::new(
-                Float3::new(0.0, 0.0, 0.0),
-                Float3::new(0.0, 0.0, 1.0),
-                Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
-            ),
-            // Back
-            Plane::new(
-                Float3::new(0.0, 0.0, 170.0),
-                Float3::new(0.0, 0.0, -1.0),
-                Material::new(Float3::zero(), Float3::zero(), BSDF::Diffuse),
-            ),
-            // Top
-            Plane::new(
-                Float3::new(0.0, 81.6, 0.0),
-                Float3::new(0.0, -1.0, 0.0),
-                Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
-            ),
-        ],
-        // Rectangles
-        vec![
-            // Light
-            Rectangle::new(
-                Float3::new(50.0, 81.5, 50.0),
-                Float3::new(0.0, -1.0, 0.0),
-                Float3::new(1.0, 0.0, 0.0),
-                Float3::new(0.0, 0.0, 1.0),
-                33.0,
-                33.0,
-                Material::new(Float3::new(12.0, 12.0, 12.0), Float3::zero(), BSDF::Diffuse),
-            ),
-        ],
-        // Triangles
-        vec![
-            // Triangle::new(
-            //     Float3::new(20.0, 10.5, 47.0),
-            //     Float3::new(20.0+32.0, 10.5, 47.0),
-            //     Float3::new(20.0, 10.5+32.0, 10.0),
-            //     Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Mirror),
-            // ),
-        ]
-    )
+    let mut scene = Scene::init();
+
+    // Spheres
+    // Mirror
+    scene.add(Box::new(Sphere::new(
+        16.5,
+        Float3::new(27.0, 16.5, 47.0),
+        Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Mirror),
+    )));
+
+    // Glass
+    scene.add(Box::new(Sphere::new(
+        16.5,
+        Float3::new(73.0, 16.5, 78.0),
+        Material::new(Float3::zero(), Float3::new(1.0, 1.0, 1.0), BSDF::Glass),
+    )));
+
+    // Planes
+    // Bottom
+    scene.add(Box::new(Plane::new(
+        Float3::new(0.0, 0.0, 0.0),
+        Float3::new(0.0, 1.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+    )));
+
+    // Left
+    scene.add(Box::new(Plane::new(
+        Float3::new(1.0, 0.0, 0.0),
+        Float3::new(1.0, 0.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.25, 0.25), BSDF::Diffuse),
+    )));
+
+    // Right
+    scene.add(Box::new(Plane::new(
+        Float3::new(99.0, 0.0, 0.0),
+        Float3::new(-1.0, 0.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.25, 0.25, 0.75), BSDF::Diffuse),
+    )));
+
+    // Front
+    scene.add(Box::new(Plane::new(
+        Float3::new(0.0, 0.0, 0.0),
+        Float3::new(0.0, 0.0, 1.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+    )));
+
+    // Back
+    scene.add(Box::new(Plane::new(
+        Float3::new(0.0, 0.0, 170.0),
+        Float3::new(0.0, 0.0, -1.0),
+        Material::new(Float3::zero(), Float3::zero(), BSDF::Diffuse),
+    )));
+
+    // Top
+    scene.add(Box::new(Plane::new(
+        Float3::new(0.0, 81.6, 0.0),
+        Float3::new(0.0, -1.0, 0.0),
+        Material::new(Float3::zero(), Float3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+    )));
+
+    // Rectangles
+    // Light
+    scene.add(Box::new(Rectangle::new(
+        Float3::new(50.0, 81.5, 50.0),
+        Float3::new(0.0, -1.0, 0.0),
+        Float3::new(1.0, 0.0, 0.0),
+        Float3::new(0.0, 0.0, 1.0),
+        33.0,
+        33.0,
+        Material::new(Float3::new(12.0, 12.0, 12.0), Float3::zero(), BSDF::Diffuse),
+    )));
+
+    return scene;
 }
 
 fn saturate(color: Float3) -> Float3 {
@@ -124,7 +114,10 @@ fn tonemap(color: Float3) -> Float3 {
 
 /// Command-line Arguments
 #[derive(StructOpt, Debug)]
-#[structopt(name = "smallpt", about = "A rust implementation of Kevin Beason's educational 100 lines small ray/pathtracer http://www.kevinbeason.com/smallpt/")]
+#[structopt(
+    name = "smallpt",
+    about = "A rust implementation of Kevin Beason's educational 100 lines small ray/pathtracer http://www.kevinbeason.com/smallpt/"
+)]
 struct Opt {
     /// Set sample count
     #[structopt(short = "s", long = "samples", default_value = "8")]
@@ -161,33 +154,37 @@ fn main() {
     };
 
     let mut buffer: Vec<u32> = vec![0x00AAAAAA; width * height];
-    let mut window = Window::new("smallpt in Rust", width, args.height, WindowOptions::default())
-        .unwrap_or_else(|e| {
-            panic!("{}", e);
-        });
-   
+    let mut window = Window::new(
+        "smallpt in Rust",
+        width,
+        args.height,
+        WindowOptions::default(),
+    ).unwrap_or_else(|e| {
+        panic!("{}", e);
+    });
+
     // Render
     trace(&scene, &camera, width, height, num_samples, &mut backbuffer);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        if accumulate { 
-            trace(&scene, &camera, width, height, num_samples, &mut backbuffer); 
-            
+        if accumulate {
+            trace(&scene, &camera, width, height, num_samples, &mut backbuffer);
+
             for i in 0..width * height {
-                let prev_r = ((buffer[i] >> 16)& 0xFF) as f64 / 255.0; 
-                let prev_g = ((buffer[i] >> 8) & 0xFF) as f64 / 255.0; 
-                let prev_b = ((buffer[i] >> 0) & 0xFF) as f64 / 255.0; 
-                let prev_color = saturate(Float3::new(prev_r, prev_g, prev_b));                 
+                let prev_r = ((buffer[i] >> 16) & 0xFF) as f64 / 255.0;
+                let prev_g = ((buffer[i] >> 8) & 0xFF) as f64 / 255.0;
+                let prev_b = ((buffer[i] >> 0) & 0xFF) as f64 / 255.0;
+                let prev_color = saturate(Float3::new(prev_r, prev_g, prev_b));
 
                 let mut color = saturate(tonemap(backbuffer[i]));
-                color = saturate(color.lerp(prev_color, 0.95)); 
+                color = saturate(color.lerp(prev_color, 0.95));
 
                 let r = (color.x * 255.0).round() as u32;
                 let g = (color.y * 255.0).round() as u32;
                 let b = (color.z * 255.0).round() as u32;
 
                 buffer[i] = (r << 16) | (g << 8) | b;
-            }            
+            }
         } else {
             for i in 0..width * height {
                 let color = saturate(tonemap(backbuffer[i]));
@@ -197,7 +194,7 @@ fn main() {
                 let b = (color.z * 255.0).round() as u32;
 
                 buffer[i] = (r << 16) | (g << 8) | b;
-            }            
+            }
         }
 
         window.update_with_buffer(&buffer).unwrap();

@@ -1,6 +1,7 @@
-use Traceable;
+use hit::Hit;
 use material::Material;
 use ray::Ray;
+use Traceable;
 
 use cgmath::prelude::*;
 extern crate cgmath;
@@ -17,12 +18,7 @@ pub struct Triangle {
 
 impl Triangle {
     // Spawn a new rectangle
-    pub fn new(
-        p0: Float3,
-        p1: Float3,
-        p2: Float3,
-        material: Material,
-    ) -> Triangle {
+    pub fn new(p0: Float3, p1: Float3, p2: Float3, material: Material) -> Triangle {
         Triangle {
             p0: p0,
             p1: p1,
@@ -35,7 +31,7 @@ impl Triangle {
 
 impl Traceable for Triangle {
     // Ray-Triangle Intersection
-    fn intersect(&self, r: &Ray) -> f64 {
+    fn intersect(&self, r: &Ray, result: &mut Hit) -> bool {
         let p0p1 = self.p1 - self.p0;
         let p0p2 = self.p2 - self.p0;
         let pvec = r.direction.cross(p0p2);
@@ -44,17 +40,32 @@ impl Traceable for Triangle {
         // if the determinant is negative the triangle is backfacing
         // if the determinant is close to 0, the ray misses the triangle
 
-        if det < 1e-6 { return 0.0; }
-   
-        let tvec = r.origin - self.p0; 
-        let u = tvec.dot(pvec) / det; 
-        if u < 0.0 || u > 1.0 { return 0.0 }; 
-    
-        let qvec = tvec.cross(p0p1); 
-        let v = r.direction.dot(qvec) / det; 
-        if v < 0.0 || u + v > 1.0 { return 0.0 }; 
+        if det < 1e-6 {
+            return false;
+        }
+
+        let tvec = r.origin - self.p0;
+        let u = tvec.dot(pvec) / det;
+        if u < 0.0 || u > 1.0 {
+            return false;
+        };
+
+        let qvec = tvec.cross(p0p1);
+        let v = r.direction.dot(qvec) / det;
+        if v < 0.0 || u + v > 1.0 {
+            return false;
+        };
 
         // intersection
-        return p0p2.dot(qvec) / det; 
+        result.t = p0p2.dot(qvec) / det;
+        result.p = r.origin + r.direction * result.t;
+        result.n = if Float3::dot(self.normal, r.direction) < 0.0 {
+            self.normal
+        } else {
+            self.normal * -1.0
+        };
+        result.material = self.material;
+
+        return true;
     }
 }

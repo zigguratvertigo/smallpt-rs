@@ -1,7 +1,7 @@
-use Traceable;
-use Hit;
-use ray::Ray;
 use material::Material;
+use ray::Ray;
+use Hit;
+use Traceable;
 
 extern crate cgmath;
 use cgmath::prelude::*;
@@ -27,14 +27,23 @@ impl Plane {
 
 impl Traceable for Plane {
     // Ray-Plane Intersection
-    fn intersect(&self, r: &Ray) -> f64 {
+    fn intersect(&self, r: &Ray, result: &mut ::Hit) -> bool {
         let plane_normal = -self.normal;
         let denom = plane_normal.dot(r.direction);
 
         if denom > 1e-6 {
-            plane_normal.dot(self.position - r.origin) / denom
+            result.t = plane_normal.dot(self.position - r.origin) / denom;
+            result.p = r.origin + r.direction * result.t;
+            result.n = if Float3::dot(self.normal, r.direction) < 0.0 {
+                self.normal
+            } else {
+                self.normal * -1.0
+            };
+            result.material = self.material;
+
+            return true;
         } else {
-            0.0
+            return false;
         }
     }
 }

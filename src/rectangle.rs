@@ -1,7 +1,7 @@
-use Traceable;
 use material::Material;
 use plane::Plane;
 use ray::Ray;
+use Traceable;
 
 use cgmath::prelude::*;
 extern crate cgmath;
@@ -43,12 +43,12 @@ impl Rectangle {
 
 impl Traceable for Rectangle {
     // Ray-Rectangle Intersection
-    fn intersect(&self, r: &Ray) -> f64 {
+    fn intersect(&self, r: &Ray, result: &mut ::Hit) -> bool {
         let rectangle_plane = Plane::new(self.position, self.normal, self.material);
-        let intersect_plane_t = rectangle_plane.intersect(r);
+        let hit = rectangle_plane.intersect(r, result);
 
-        if intersect_plane_t > 0.0 {
-            let p = r.origin + r.direction * intersect_plane_t;
+        if hit == true {
+            let p = r.origin + r.direction * result.t;
             let v = p - self.position;
 
             let half_width = self.width * 0.5;
@@ -56,10 +56,17 @@ impl Traceable for Rectangle {
 
             // Project in 2D plane and clamp inside the rectangle
             if v.dot(self.left).abs() <= half_width && v.dot(self.up).abs() <= half_height {
-                return intersect_plane_t;
+                result.p = p;
+                result.n = if Float3::dot(self.normal, r.direction) < 0.0 {
+                    self.normal
+                } else {
+                    self.normal * -1.0
+                };
+                result.material = self.material;
+                return true;
             }
         }
 
-        0.0
+        return false;
     }
 }
