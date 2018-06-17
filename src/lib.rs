@@ -1,5 +1,7 @@
 #![allow(unused_imports)]
 
+#[macro_use]
+extern crate log;
 extern crate cgmath;
 extern crate num_cpus;
 extern crate rand;
@@ -105,7 +107,7 @@ pub fn trace(
                 }
             });
 
-        println!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
+        debug!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
     }
 }
 
