@@ -1,6 +1,6 @@
 ﻿[package]
 name = "smallpt"
-version = "0.1.6"
+version = "0.1.7"
 license = "MIT"
 description = "A small ray/pathtracer in Rust, inspired by Kevin Beason's educational 99-lines ray/pathtracer (http://www.kevinbeason.com/smallpt/)"
 keywords = ["raytracer", "raytracing", "ray-tracing", "path-tracer"]
@@ -18,3 +18,4 @@ structopt = "0.2"
 cgmath = "0.16.1"
 rand = "0.5.0"
 num_cpus = "1.8.0"
+log = "0.4.2"
