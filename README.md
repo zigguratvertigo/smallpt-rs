@@ -14,7 +14,7 @@ Usage
 ```toml
 # Cargo.toml
 [dependencies]
-smallpt = "0.1.7"
+smallpt = "0.1.9"
 ```
 
 Example
