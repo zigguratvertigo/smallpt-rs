@@ -19,12 +19,7 @@ cgmath = "0.16.1"
 rand = "0.5.1"
 num_cpus = "1.8.0"
 log = "0.4.2"
-
-[dev-dependencies]
-smallpt = { path = "../smallpt-rs" }
 minifb = "0.10.6"
-structopt = "0.2.10"
-cgmath = "0.16.1"
 
 [[bin]]
 name = "reference"
