@@ -13,5 +13,6 @@ matrix:
 before_script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install xorg-dev; fi
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo build --verbose --lib
+  - cargo build --verbose --example reference
+  
