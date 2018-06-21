@@ -1,6 +1,6 @@
 ﻿[package]
 name = "smallpt"
-version = "0.1.9"
+version = "0.1.10"
 license = "MIT"
 description = "A small ray/pathtracer in Rust, inspired by Kevin Beason's educational 99-lines ray/pathtracer (http://www.kevinbeason.com/smallpt/)"
 keywords = ["raytracer", "raytracing", "ray-tracing", "path-tracer"]
@@ -14,13 +14,11 @@ travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
 
 [dependencies]
 rayon = "1.0.1"
-structopt = "0.2.10"
 cgmath = "0.16.1"
-rand = "0.5.1"
+rand = "0.5.2"
 num_cpus = "1.8.0"
 log = "0.4.2"
-minifb = "0.10.6"
 
-[[bin]]
-name = "reference"
-path = "examples/reference.rs"
+[dev-dependencies]
+minifb = "0.10.6"
+structopt = "0.2.10"
