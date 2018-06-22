@@ -8,6 +8,12 @@ Inspired by [Kevin Beason's educational 99-line raytracer/pathtracer](http://www
 
 ![alt text](https://github.com/zigguratvertigo/smallpt-rs/blob/master/smallpt.png)
 
+Supports:
+- Ray-to-Sphere
+- Ray-to-Plane
+- Ray-to-Rectangle
+- Ray-to-Triangle (slow, no acceleration yet. Soon)
+
 Usage
 -----
 
