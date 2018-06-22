@@ -9,6 +9,7 @@ extern crate rayon;
 use rayon::prelude::*;
 use std::f32::consts::PI;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub mod bsdf;
 pub mod hit;
@@ -43,7 +44,10 @@ pub fn trace(
     height: usize,
     num_samples: u32,
     backbuffer: &mut [Float3],
+    num_rays: &mut usize,
 ) {
+    let trace_ray_count = AtomicUsize::new(0);
+
     let aperture = 0.5135;
     let cx = Float3::new(width as f32 * aperture / height as f32, 0.0, 0.0);
     let cy = cx.cross(camera.direction).normalize() * aperture;
@@ -70,6 +74,7 @@ pub fn trace(
                     let y = (height - pixel_index / width - 1) as f32;
 
                     let mut radiance = Float3::zero();
+                    let mut chunk_num_rays: usize = 0;
 
                     // Samples per pixel
                     for _ in 0..num_samples {
@@ -98,7 +103,9 @@ pub fn trace(
                             direction: v.normalize(),
                         };
 
-                        radiance += compute_radiance(ray, &scene, 0);
+                        radiance += compute_radiance(ray, &scene, 0, &mut chunk_num_rays);
+
+                        trace_ray_count.fetch_add(chunk_num_rays, Ordering::Relaxed);
                     }
 
                     inner_chunk[i] = radiance / num_samples as f32;
@@ -107,13 +114,16 @@ pub fn trace(
 
         debug!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
     }
+
+    *num_rays = trace_ray_count.load(Ordering::Relaxed);
 }
 
 fn luminance(color: Float3) -> f32 {
     0.299 * color.get_x() + 0.587 * color.get_y() + 0.114 * color.get_z()
 }
 
-fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
+fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -> Float3 {
+    *num_rays += 1;
     let intersect: Option<Hit> = scene.intersect(ray);
 
     match intersect {
@@ -127,7 +137,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                 if rand::random::<f32>() < luminance(f) && depth < 10 {
                     f = f / luminance(f);
                 } else {
-                	return hit.material.emission;
+                    return hit.material.emission;
                 }
             }
 
@@ -154,19 +164,27 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                         Ray::new(position, next_direction.normalize()),
                         scene,
                         depth + 1,
+                        num_rays,
                     )
                 }
 
                 // Mirror Reflection
                 BSDF::Mirror => {
-                    let r = ray.direction.normalize() - normal.normalize() * 2.0 * normal.dot(ray.direction);
+                    let r = ray.direction.normalize()
+                        - normal.normalize() * 2.0 * normal.dot(ray.direction);
 
-                    compute_radiance(Ray::new(position, r.normalize()), scene, depth + 1)
+                    compute_radiance(
+                        Ray::new(position, r.normalize()),
+                        scene,
+                        depth + 1,
+                        num_rays,
+                    )
                 }
 
                 // Glass / Translucent
                 BSDF::Glass => {
-                    let r = ray.direction.normalize() - normal.normalize() * 2.0 * normal.dot(ray.direction);
+                    let r = ray.direction.normalize()
+                        - normal.normalize() * 2.0 * normal.dot(ray.direction);
                     let reflection = Ray::new(position, r);
 
                     // Compute input-output IOR
@@ -181,7 +199,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
 
                     if cos2t < 0.0 {
                         // Total internal reflection
-                        compute_radiance(reflection, scene, depth + 1)
+                        compute_radiance(reflection, scene, depth + 1, num_rays)
                     } else {
                         let transmitted_dir = (ray.direction * nnt
                             - normal
@@ -208,28 +226,22 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32) -> Float3 {
                         if depth > 1 {
                             // Russian roulette between reflectance and transmittance
                             if rand::random::<f32>() < rr_propability {
-                                compute_radiance(reflection, scene, depth + 1)
+                                compute_radiance(reflection, scene, depth + 1, num_rays)
                                     * reflectance_propability
                             } else {
-                                compute_radiance(transmitted_ray, scene, depth + 1)
+                                compute_radiance(transmitted_ray, scene, depth + 1, num_rays)
                                     * transmittance_propability
                             }
                         } else {
-                            compute_radiance(reflection, scene, depth + 1) * reflectance
-                                + compute_radiance(transmitted_ray, scene, depth + 1)
+                            compute_radiance(reflection, scene, depth + 1, num_rays) * reflectance
+                                + compute_radiance(transmitted_ray, scene, depth + 1, num_rays)
                                     * transmittance
                         }
                     }
                 }
             };
 
-            //return irradiance * f;
-
-            return Float3::new(
-                irradiance.get_x() * f.get_x() + hit.material.emission.get_x(),
-                irradiance.get_y() * f.get_y() + hit.material.emission.get_y(),
-                irradiance.get_z() * f.get_z() + hit.material.emission.get_z(),
-            );
+            return irradiance * f + hit.material.emission;
         }
     }
 }

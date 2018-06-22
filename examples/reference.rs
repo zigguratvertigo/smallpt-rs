@@ -3,6 +3,7 @@ extern crate smallpt;
 
 use minifb::{Key, Window, WindowOptions};
 use smallpt::*;
+use std::time::*;
 
 fn main() {
     let num_samples = 256;
@@ -93,8 +94,38 @@ fn main() {
             panic!("{}", e);
         });
 
+    let mut num_rays = 0;
+    let start_time = SystemTime::now();
+
+    println!(
+        "Rendering {}x{} @ {} samples/pixel",
+        width, height, num_samples
+    );
+
     // Render
-    trace(&scene, &camera, width, height, num_samples, &mut backbuffer);
+    trace(
+        &scene,
+        &camera,
+        width,
+        height,
+        num_samples,
+        &mut backbuffer,
+        &mut num_rays,
+    );
+
+    // Print some metrics
+    let mrays = num_rays / 1000000;
+    let elapsed_seconds = start_time
+        .elapsed()
+        .expect("SystemTime elapsed time failed")
+        .as_secs();
+
+    println!(
+        "Rendering Done: {} mrays/s, {} mrays, {} seconds",
+        (mrays as f64 / elapsed_seconds as f64).round(),
+        mrays,
+        elapsed_seconds
+    );
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         for i in 0..width * height {

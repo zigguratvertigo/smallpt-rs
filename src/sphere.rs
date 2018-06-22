@@ -1,9 +1,9 @@
-use std;
-use Traceable;
 use hit::Hit;
 use material::Material;
 use ray::Ray;
+use std;
 use vector::*;
+use Traceable;
 
 #[derive(Copy, Clone)]
 pub struct Sphere {
@@ -64,4 +64,3 @@ impl Traceable for Sphere {
         }
     }
 }
-

@@ -1,8 +1,8 @@
 use hit::Hit;
 use material::Material;
 use ray::Ray;
-use Traceable;
 use vector::*;
+use Traceable;
 
 #[derive(Copy, Clone)]
 pub struct Triangle {
@@ -86,7 +86,8 @@ impl Traceable for Triangle {
         result.b = Float3::new(1.0 - u - v, u, v);
 
         // Compute interpolated normal
-        result.n = result.b.get_x() * self.n0 + result.b.get_y() * self.n1 + result.b.get_z() * self.n2;
+        result.n =
+            result.b.get_x() * self.n0 + result.b.get_y() * self.n1 + result.b.get_z() * self.n2;
 
         return true;
     }
