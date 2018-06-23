@@ -10,6 +10,7 @@ use rayon::prelude::*;
 use std::f32::consts::PI;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use rand::{weak_rng, SeedableRng, XorShiftRng};
 
 pub mod bsdf;
 pub mod hit;
@@ -21,6 +22,7 @@ pub mod scene;
 pub mod sphere;
 pub mod triangle;
 pub mod vector;
+pub mod camera;
 
 pub use bsdf::*;
 pub use hit::*;
@@ -32,6 +34,7 @@ pub use scene::*;
 pub use sphere::*;
 pub use triangle::*;
 pub use vector::*;
+pub use camera::*;
 
 pub trait Traceable: Send + Sync {
     fn intersect(&self, ray: &Ray, result: &mut Hit) -> bool;
@@ -39,83 +42,63 @@ pub trait Traceable: Send + Sync {
 
 pub fn trace(
     scene: &Scene,
-    camera: &Ray,
+    camera: &Camera,
     width: usize,
     height: usize,
     num_samples: u32,
     backbuffer: &mut [Float3],
     num_rays: &mut usize,
 ) {
-    let trace_ray_count = AtomicUsize::new(0);
+    let ray_count = AtomicUsize::new(0);
 
-    let aperture = 0.5135;
-    let cx = Float3::new(width as f32 * aperture / height as f32, 0.0, 0.0);
-    let cy = cx.cross(camera.direction).normalize() * aperture;
-
-    // Split the work
-    let num_cpus = num_cpus::get();
-    let num_inner_chunks = num_cpus * num_cpus;
-    let num_outer_chunks = 100;
-    let outer_chunk_size = ceil_divide(width * height, num_outer_chunks);
-
-    for (outer_chunk_index, outer_chunk) in backbuffer.chunks_mut(outer_chunk_size).enumerate() {
-        let inner_chunk_size = ceil_divide(outer_chunk_size, num_inner_chunks);
-
-        // Create and process parallel outer chunks
-        outer_chunk
-            .par_chunks_mut(inner_chunk_size)
-            .enumerate()
-            .for_each(|(inner_chunk_index, inner_chunk)| {
-                for i in 0..inner_chunk.len() {
-                    let pixel_index = i
-                        + inner_chunk_index * inner_chunk_size
-                        + outer_chunk_index * outer_chunk_size;
-                    let x = (pixel_index % width) as f32;
-                    let y = (height - pixel_index / width - 1) as f32;
-
+    // For each row of pixels
+    backbuffer
+        .par_chunks_mut(width as usize)
+        .enumerate()
+        .for_each(|(j, row)| {
+            row.iter_mut().enumerate().for_each(|(i, color_out)| {
+                let mut col = Float3::zero();
+                for _ in 0..num_samples {
                     let mut radiance = Float3::zero();
                     let mut chunk_num_rays: usize = 0;
 
-                    // Samples per pixel
-                    for _ in 0..num_samples {
-                        // Jitter for AA
-                        let r1: f32 = 2.0 * rand::random::<f32>();
-                        let dx = if r1 < 1.0 {
-                            r1.sqrt() - 1.0
-                        } else {
-                            1.0 - (2.0 - r1).sqrt()
-                        };
-                        let r2: f32 = 2.0 * rand::random::<f32>();
-                        let dy = if r2 < 1.0 {
-                            r2.sqrt() - 1.0
-                        } else {
-                            1.0 - (2.0 - r2).sqrt()
-                        };
+                    // Jitter for AA
+                    let r1: f32 = 2.0 * rand::random::<f32>();
+                    let dx = if r1 < 1.0 {
+                        r1.sqrt() - 1.0
+                    } else {
+                        1.0 - (2.0 - r1).sqrt()
+                    };
+                    let r2: f32 = 2.0 * rand::random::<f32>();
+                    let dy = if r2 < 1.0 {
+                        r2.sqrt() - 1.0
+                    } else {
+                        1.0 - (2.0 - r2).sqrt()
+                    };
 
-                        // Compute V
-                        let v = camera.direction
-                            + cx * (((0.5 + dx) / 2.0 + x) / width as f32 - 0.5)
-                            + cy * (((0.5 + dy) / 2.0 + y) / height as f32 - 0.5);
+                    // Compute V
+                    let v = camera.forward
+                        + camera.right * (((0.5 + dx) / 2.0 + i as f32) / width as f32 - 0.5)
+                        - camera.up * (((0.5 + dy) / 2.0 + j as f32) / height as f32 - 0.5);
 
-                        // Spawn a ray
-                        let ray = Ray {
-                            origin: camera.origin + v * 10.0,
-                            direction: v.normalize(),
-                        };
+                    // Spawn a ray
+                    let ray = Ray {
+                        origin: camera.origin + v * 10.0,
+                        direction: v.normalize(),
+                    };
 
-                        radiance += compute_radiance(ray, &scene, 0, &mut chunk_num_rays);
+                    radiance += compute_radiance(ray, &scene, 0, &mut chunk_num_rays);
 
-                        trace_ray_count.fetch_add(chunk_num_rays, Ordering::Relaxed);
-                    }
+                    ray_count.fetch_add(chunk_num_rays, Ordering::Relaxed);
 
-                    inner_chunk[i] = radiance / num_samples as f32;
+                    col += radiance;
                 }
+                
+                *color_out = col / num_samples as f32;
             });
+        });
 
-        debug!("Rendering ({} spp) {}%\r", num_samples, outer_chunk_index);
-    }
-
-    *num_rays = trace_ray_count.load(Ordering::Relaxed);
+    *num_rays = ray_count.load(Ordering::Relaxed);
 }
 
 fn luminance(color: Float3) -> f32 {
@@ -243,15 +226,6 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 
             return irradiance * f + hit.material.emission;
         }
-    }
-}
-
-fn ceil_divide(dividend: usize, divisor: usize) -> usize {
-    let division = dividend / divisor;
-    if division * divisor == dividend {
-        division
-    } else {
-        division + 1
     }
 }
 
