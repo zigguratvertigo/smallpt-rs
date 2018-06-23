@@ -83,10 +83,17 @@ fn main() {
         Material::new(Float3::new(12.0, 12.0, 12.0), Float3::zero(), BSDF::Diffuse),
     )));
 
-    let camera = Ray {
-        origin: Float3::new(50.0, 50.0, 300.0),
-        direction: Float3::new(0.0, -0.05, -1.0).normalize(),
-    };
+    let aperture = 0.5135;
+    let camera_origin = Float3::new(50.0, 50.0, 300.0);
+    let camera_direction = Float3::new(0.0, -0.05, -1.0).normalize();
+    let camera_right = Float3::new(width as f32 * aperture / height as f32, 0.0, 0.0);
+    let camera_up = camera_right.cross(camera_direction).normalize() * aperture;
+
+    let camera = Camera::new(
+        camera_origin,
+        camera_direction,
+        camera_right,
+        camera_up);
 
     let mut buffer: Vec<u32> = vec![0; width * height];
     let mut window = Window::new("smallpt in Rust", width, height, WindowOptions::default())
