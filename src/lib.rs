@@ -10,7 +10,6 @@ use rayon::prelude::*;
 use std::f32::consts::PI;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use rand::{weak_rng, SeedableRng, XorShiftRng};
 
 pub mod bsdf;
 pub mod hit;
@@ -56,12 +55,11 @@ pub fn trace(
         .par_chunks_mut(width as usize)
         .enumerate()
         .for_each(|(j, row)| {
-            row.iter_mut().enumerate().for_each(|(i, color_out)| {
-                let mut col = Float3::zero();
-                for _ in 0..num_samples {
-                    let mut radiance = Float3::zero();
-                    let mut chunk_num_rays: usize = 0;
+            row.iter_mut().enumerate().for_each(|(i, output)| {
+                let mut radiance = Float3::zero();
+                let mut row_num_rays = 0;
 
+                for _ in 0..num_samples {
                     // Jitter for AA
                     let r1: f32 = 2.0 * rand::random::<f32>();
                     let dx = if r1 < 1.0 {
@@ -87,14 +85,11 @@ pub fn trace(
                         direction: v.normalize(),
                     };
 
-                    radiance += compute_radiance(ray, &scene, 0, &mut chunk_num_rays);
-
-                    ray_count.fetch_add(chunk_num_rays, Ordering::Relaxed);
-
-                    col += radiance;
+                    radiance += compute_radiance(ray, &scene, 0, &mut row_num_rays);
                 }
-                
-                *color_out = col / num_samples as f32;
+
+                ray_count.fetch_add(row_num_rays, Ordering::Relaxed);                
+                *output = radiance / num_samples as f32;
             });
         });
 
