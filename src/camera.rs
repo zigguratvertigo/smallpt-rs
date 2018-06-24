@@ -10,17 +10,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(
-        origin: Float3,
-        forward: Float3,    
-        right: Float3,
-        up: Float3) -> Camera
-    {
+    pub fn new(origin: Float3, forward: Float3, right: Float3, up: Float3) -> Camera {
         Camera {
             origin: origin,
             forward: forward,
             right: right,
-            up: up
+            up: up,
         }
     }
 }
