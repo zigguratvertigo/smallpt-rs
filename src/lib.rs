@@ -6,12 +6,14 @@ extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
 
+use rand::prelude::*;
 use rayon::prelude::*;
 use std::f32::consts::PI;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 pub mod bsdf;
+pub mod camera;
 pub mod hit;
 pub mod material;
 pub mod plane;
@@ -21,9 +23,9 @@ pub mod scene;
 pub mod sphere;
 pub mod triangle;
 pub mod vector;
-pub mod camera;
 
 pub use bsdf::*;
+pub use camera::*;
 pub use hit::*;
 pub use material::*;
 pub use plane::*;
@@ -33,7 +35,6 @@ pub use scene::*;
 pub use sphere::*;
 pub use triangle::*;
 pub use vector::*;
-pub use camera::*;
 
 pub trait Traceable: Send + Sync {
     fn intersect(&self, ray: &Ray, result: &mut Hit) -> bool;
@@ -44,11 +45,14 @@ pub fn trace(
     camera: &Camera,
     width: usize,
     height: usize,
-    num_samples: u32,
+    samples: u32,
     backbuffer: &mut [Float3],
-    num_rays: &mut usize,
+    rays: &mut usize,
 ) {
     let ray_count = AtomicUsize::new(0);
+    let inv_width = 1.0 / width as f32;
+    let inv_height = 1.0 / height as f32;
+    let inv_samples = 1.0 / samples as f32;
 
     // For each row of pixels
     backbuffer
@@ -57,27 +61,17 @@ pub fn trace(
         .for_each(|(j, row)| {
             row.iter_mut().enumerate().for_each(|(i, output)| {
                 let mut radiance = Float3::zero();
-                let mut row_num_rays = 0;
+                let mut num_rays = 0;
+                let mut rng = thread_rng();
 
-                for _ in 0..num_samples {
-                    // Jitter for AA
-                    let r1: f32 = 2.0 * rand::random::<f32>();
-                    let dx = if r1 < 1.0 {
-                        r1.sqrt() - 1.0
-                    } else {
-                        1.0 - (2.0 - r1).sqrt()
-                    };
-                    let r2: f32 = 2.0 * rand::random::<f32>();
-                    let dy = if r2 < 1.0 {
-                        r2.sqrt() - 1.0
-                    } else {
-                        1.0 - (2.0 - r2).sqrt()
-                    };
+                for _ in 0..samples {
+                    let rnd_x: f32 = rng.gen();
+                    let rnd_y: f32 = rng.gen();
+                    let dx = ((i as f32 + rnd_x) * inv_width) - 0.5;
+                    let dy = ((j as f32 + rnd_y) * inv_height) - 0.5;
 
                     // Compute V
-                    let v = camera.forward
-                        + camera.right * (((0.5 + dx) / 2.0 + i as f32) / width as f32 - 0.5)
-                        - camera.up * (((0.5 + dy) / 2.0 + j as f32) / height as f32 - 0.5);
+                    let v = camera.forward + camera.right * dx - camera.up * dy;
 
                     // Spawn a ray
                     let ray = Ray {
@@ -85,15 +79,15 @@ pub fn trace(
                         direction: v.normalize(),
                     };
 
-                    radiance += compute_radiance(ray, &scene, 0, &mut row_num_rays);
+                    radiance += compute_radiance(ray, &scene, 0, &mut num_rays);
                 }
 
-                ray_count.fetch_add(row_num_rays, Ordering::Relaxed);                
-                *output = radiance / num_samples as f32;
+                ray_count.fetch_add(num_rays, Ordering::Relaxed);
+                *output = radiance * inv_samples;
             });
         });
 
-    *num_rays = ray_count.load(Ordering::Relaxed);
+    *rays = ray_count.load(Ordering::Relaxed);
 }
 
 fn luminance(color: Float3) -> f32 {
