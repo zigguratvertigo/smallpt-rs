@@ -1,6 +1,6 @@
 ﻿[package]
 name = "smallpt"
-version = "0.1.11"
+version = "0.1.12"
 license = "MIT"
 description = "A small ray/pathtracer in Rust, inspired by Kevin Beason's educational 99-lines ray/pathtracer (http://www.kevinbeason.com/smallpt/)"
 keywords = ["raytracer", "raytracing", "ray-tracing", "path-tracer"]

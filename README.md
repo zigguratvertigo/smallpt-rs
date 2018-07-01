@@ -20,7 +20,7 @@ Usage
 ```toml
 # Cargo.toml
 [dependencies]
-smallpt = "0.1.11"
+smallpt = "0.1.12"
 ```
 
 Example
@@ -111,17 +111,21 @@ scene.add(Box::new(Rectangle::new(
     Material::new(Float3::new(12.0, 12.0, 12.0), Float3::zero(), BSDF::Diffuse),
 )));    
 
-let camera = Ray {
-    origin: Float3::new(50.0, 50.0, 300.0),
-    direction: Float3::new(0.0, -0.05, -1.0).normalize(),
-};
+let aperture = 0.5135;
+let camera_origin = Float3::new(50.0, 50.0, 300.0);
+let camera_direction = Float3::new(0.0, -0.05, -1.0).normalize();
+let camera_right = Float3::new(width as f32 * aperture / height as f32, 0.0, 0.0);
+let camera_up = camera_right.cross(camera_direction).normalize() * aperture;
+
+let camera = Camera::new(camera_origin, camera_direction, camera_right, camera_up);
 
 // Render
 let num_samples = 16;
 let width = 512;
 let height = 512;
+let mut num_rays = 0;
 let mut backbuffer = vec![Float3::zero(); width * height];   
-trace(&scene, &camera, width, height, num_samples, &mut backbuffer);
+trace(&scene, &camera, width, height, num_samples, &mut backbuffer, &mut num_rays);
 ```
 
 Status
