@@ -23,7 +23,6 @@ pub mod scene;
 pub mod sphere;
 pub mod triangle;
 pub mod vector;
-
 pub use bsdf::*;
 pub use camera::*;
 pub use hit::*;
