@@ -1,21 +1,21 @@
-// Basic camera
-use vector::*;
+use nalgebra::*;
+type Vec3 = Vector3<f32>;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Camera {
-    pub origin: Float3,
-    pub forward: Float3,
-    pub right: Float3,
-    pub up: Float3,
+	pub origin: Vec3,
+	pub forward: Vec3,
+	pub right: Vec3,
+	pub up: Vec3,
 }
 
 impl Camera {
-    pub fn new(origin: Float3, forward: Float3, right: Float3, up: Float3) -> Camera {
-        Camera {
-            origin: origin,
-            forward: forward,
-            right: right,
-            up: up,
-        }
-    }
+	pub fn new(origin: Vec3, forward: Vec3, right: Vec3, up: Vec3) -> Camera {
+		Camera {
+			origin: origin,
+			forward: forward,
+			right: right,
+			up: up,
+		}
+	}
 }

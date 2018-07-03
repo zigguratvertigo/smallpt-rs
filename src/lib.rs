@@ -1,10 +1,11 @@
 #![allow(unused_imports)]
-
 #[macro_use]
+
 extern crate log;
 extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
+extern crate nalgebra;
 
 use rand::prelude::*;
 use rayon::prelude::*;
@@ -23,7 +24,6 @@ pub mod scene;
 pub mod sphere;
 pub mod triangle;
 pub mod vector;
-
 pub use bsdf::*;
 pub use camera::*;
 pub use hit::*;
@@ -34,7 +34,8 @@ pub use rectangle::*;
 pub use scene::*;
 pub use sphere::*;
 pub use triangle::*;
-pub use vector::*;
+pub use nalgebra::*;
+pub type Vec3 = Vector3<f32>;
 
 pub trait Traceable: Send + Sync {
 	fn intersect(&self, ray: &Ray, result: &mut Hit) -> bool;
@@ -46,7 +47,7 @@ pub fn trace(
 	width: usize,
 	height: usize,
 	samples: u32,
-	backbuffer: &mut [Float3],
+	backbuffer: &mut [Vec3],
 	rays: &mut usize,
 ) {
 	let ray_count = AtomicUsize::new(0);
@@ -60,7 +61,7 @@ pub fn trace(
 		.enumerate()
 		.for_each(|(j, row)| {
 			row.iter_mut().enumerate().for_each(|(i, output)| {
-				let mut radiance = Float3::zero();
+				let mut radiance = Vec3::zeros();
 				let mut num_rays = 0;
 				let mut rng = thread_rng();
 
@@ -90,16 +91,16 @@ pub fn trace(
 	*rays = ray_count.load(Ordering::Relaxed);
 }
 
-fn luminance(color: Float3) -> f32 {
-	0.299 * color.get_x() + 0.587 * color.get_y() + 0.114 * color.get_z()
+fn luminance(color: Vec3) -> f32 {
+	0.299 * color.x + 0.587 * color.y + 0.114 * color.z
 }
 
-fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -> Float3 {
+fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -> Vec3 {
 	*num_rays += 1;
 	let intersect: Option<Hit> = scene.intersect(ray);
 
 	match intersect {
-		None => Float3::zero(),
+		None => Vec3::zeros(),
 		Some(hit) => {
 			let position = ray.origin + ray.direction * hit.t;
 			let normal = hit.n;
@@ -113,21 +114,21 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 				}
 			}
 
-			let irradiance: Float3 = match hit.material.bsdf {
+			let irradiance: Vec3 = match hit.material.bsdf {
 				// Diffuse Reflection
 				BSDF::Diffuse => {
 					// Sample cosine distribution and transform into world tangent space
 					let r1 = 2.0 * PI * rand::random::<f32>();
 					let r2 = rand::random::<f32>();
 					let r2s = r2.sqrt();
-					let w_up = if normal.get_x().abs() > 0.1 {
-						Float3::new(0.0, 1.0, 0.0)
+					let w_up = if normal.x.abs() > 0.1 {
+						Vec3::new(0.0, 1.0, 0.0)
 					} else {
-						Float3::new(1.0, 0.0, 0.0)
+						Vec3::new(1.0, 0.0, 0.0)
 					};
 
-					let tangent = normal.cross(w_up).normalize();
-					let bitangent = normal.cross(tangent).normalize();
+					let tangent = normal.cross(&w_up).normalize();
+					let bitangent = normal.cross(&tangent).normalize();
 					let next_direction = tangent * r1.cos() * r2s
 						+ bitangent * r1.sin() * r2s
 						+ normal * (1.0 - r2).sqrt();
@@ -143,7 +144,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 				// Mirror Reflection
 				BSDF::Mirror => {
 					let r = ray.direction.normalize()
-						- normal.normalize() * 2.0 * normal.dot(ray.direction);
+						- normal.normalize() * 2.0 * normal.dot(&ray.direction);
 
 					compute_radiance(
 						Ray::new(position, r.normalize()),
@@ -156,17 +157,17 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 				// Glass / Translucent
 				BSDF::Glass => {
 					let r = ray.direction.normalize()
-						- normal.normalize() * 2.0 * normal.dot(ray.direction);
+						- normal.normalize() * 2.0 * normal.dot(&ray.direction);
 					let reflection = Ray::new(position, r);
 
 					// Compute input-output IOR
-					let into = normal.dot(normal) > 0.0;
+					let into = normal.dot(&normal) > 0.0;
 					let nc = 1.0;
 					let nt = 1.5;
 					let nnt = if into { nc / nt } else { nt / nc };
 
 					// Compute fresnel
-					let ddn = ray.direction.dot(normal);
+					let ddn = ray.direction.dot(&normal);
 					let cos2t = 1.0 - nnt * nnt * (1.0 - ddn * ddn);
 
 					if cos2t < 0.0 {
@@ -185,7 +186,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 						let c = 1.0 - if into {
 							-ddn
 						} else {
-							transmitted_dir.dot(normal)
+							transmitted_dir.dot(&normal)
 						};
 
 						let reflectance =
@@ -213,26 +214,26 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 				}
 			};
 
-			return irradiance * f + hit.material.emission;
+			return irradiance.component_mul(&f) + hit.material.emission;
 		}
 	}
 }
 
 // todo: remove me later
 
-pub fn saturate(color: Float3) -> Float3 {
-	Float3::new(
-		color.get_x().max(0.0).min(1.0),
-		color.get_y().max(0.0).min(1.0),
-		color.get_z().max(0.0).min(1.0),
+pub fn saturate(color: Vec3) -> Vec3 {
+	Vec3::new(
+		color.x.max(0.0).min(1.0),
+		color.y.max(0.0).min(1.0),
+		color.z.max(0.0).min(1.0),
 	)
 }
 
-pub fn tonemap(color: Float3) -> Float3 {
-	let color_linear = Float3::new(
-		color.get_x().powf(1.0 / 2.2),
-		color.get_y().powf(1.0 / 2.2),
-		color.get_z().powf(1.0 / 2.2),
+pub fn tonemap(color: Vec3) -> Vec3 {
+	let color_linear = Vec3::new(
+		color.x.powf(1.0 / 2.2),
+		color.y.powf(1.0 / 2.2),
+		color.z.powf(1.0 / 2.2),
 	);
 
 	return saturate(color_linear);
