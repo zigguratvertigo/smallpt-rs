@@ -2,10 +2,11 @@
 #[macro_use]
 
 extern crate log;
+extern crate bvh;
+extern crate nalgebra;
 extern crate num_cpus;
 extern crate rand;
 extern crate rayon;
-extern crate nalgebra;
 
 use rand::prelude::*;
 use rayon::prelude::*;
@@ -28,14 +29,15 @@ pub use bsdf::*;
 pub use camera::*;
 pub use hit::*;
 pub use material::*;
+pub use nalgebra::{Point3, Vector3};
 pub use plane::*;
 pub use ray::*;
 pub use rectangle::*;
 pub use scene::*;
 pub use sphere::*;
 pub use triangle::*;
-pub use nalgebra::*;
 pub type Vec3 = Vector3<f32>;
+pub type Pt3 = Point3<f32>;
 
 pub trait Traceable: Send + Sync {
 	fn intersect(&self, ray: &Ray, result: &mut Hit) -> bool;
@@ -61,7 +63,7 @@ pub fn trace(
 		.enumerate()
 		.for_each(|(j, row)| {
 			row.iter_mut().enumerate().for_each(|(i, output)| {
-				let mut radiance = Vec3::zeros();
+				let mut radiance = Vec3::new(0.0, 0.0, 0.0);
 				let mut num_rays = 0;
 				let mut rng = thread_rng();
 
@@ -100,7 +102,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 	let intersect: Option<Hit> = scene.intersect(ray);
 
 	match intersect {
-		None => Vec3::zeros(),
+		None => Vec3::new(0.0, 0.0, 0.0),
 		Some(hit) => {
 			let position = ray.origin + ray.direction * hit.t;
 			let normal = hit.n;
@@ -175,8 +177,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 						compute_radiance(reflection, scene, depth + 1, num_rays)
 					} else {
 						let transmitted_dir = (ray.direction * nnt
-							- normal
-								* (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
+							- normal * (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
 							.normalize();
 						let transmitted_ray = Ray::new(position, transmitted_dir);
 

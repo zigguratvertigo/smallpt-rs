@@ -1,5 +1,5 @@
 use bsdf::BSDF;
-use nalgebra::{Vector3};
+use nalgebra::Vector3;
 type Vec3 = Vector3<f32>;
 
 #[derive(Copy, Clone)]
@@ -20,15 +20,15 @@ impl Material {
 
 	pub fn black() -> Material {
 		Material {
-			emission: Vec3::zeros(),
-			albedo: Vec3::zeros(),
+			emission: Vec3::new(0.0, 0.0, 0.0),
+			albedo: Vec3::new(0.0, 0.0, 0.0),
 			bsdf: BSDF::Diffuse,
 		}
 	}
 
 	pub fn white() -> Material {
 		Material {
-			emission: Vec3::zeros(),
+			emission: Vec3::new(0.0, 0.0, 0.0),
 			albedo: Vec3::new(1.0, 1.0, 1.0),
 			bsdf: BSDF::Diffuse,
 		}
