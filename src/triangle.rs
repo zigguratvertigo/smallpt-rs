@@ -83,13 +83,13 @@ impl Traceable for Triangle {
 		let p0p1 = self.p1 - self.p0;
 		let p0p2 = self.p2 - self.p0;
 		let pvec = r.direction.cross(&p0p2);
-		let det = p0p1.dot(&pvec);
 
 		// if the determinant is negative the triangle is backfacing
 		// if the determinant is close to 0, the ray misses the triangle
-		if det < 1e-6 {
-			return false;
-		}
+		let det = p0p1.dot(&pvec).abs(); // double-sided
+								   // if det < 1e-6 {
+								   // 	return false;
+								   // }
 
 		let tvec = r.origin - self.p0;
 		let u = tvec.dot(&pvec) / det;
