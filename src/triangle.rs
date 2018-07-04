@@ -2,6 +2,7 @@ use hit::Hit;
 use material::Material;
 use nalgebra::{Point3, Vector3};
 use ray::Ray;
+use PrimitiveType;
 use Traceable;
 
 type Vec3 = Vector3<f32>;
@@ -22,7 +23,9 @@ pub struct Triangle {
 	pub n2: Vec3,
 	//
 	pub material: Material,
+	//
 	aabb: AABB,
+	node_index: usize,
 }
 
 impl Triangle {
@@ -42,6 +45,7 @@ impl Triangle {
 			n2: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			material: material,
 			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			node_index: 0,
 		}
 	}
 	// Spawn a new rectangle, with per-vertex normals
@@ -68,6 +72,7 @@ impl Triangle {
 			normal: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			material: material,
 			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			node_index: 0,
 		}
 	}
 }
@@ -109,10 +114,24 @@ impl Traceable for Triangle {
 
 		return true;
 	}
+
+	fn get_primitive_type(&self) -> PrimitiveType {
+		PrimitiveType::Triangle
+	}
 }
 
 impl Bounded for Triangle {
 	fn aabb(&self) -> AABB {
 		self.aabb
+	}
+}
+
+impl BHShape for Triangle {
+	fn set_bh_node_index(&mut self, index: usize) {
+		self.node_index = index;
+	}
+
+	fn bh_node_index(&self) -> usize {
+		self.node_index
 	}
 }
