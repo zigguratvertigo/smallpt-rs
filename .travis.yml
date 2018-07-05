@@ -15,4 +15,6 @@ before_script:
 script:
   - cargo build --verbose --lib
   - cargo build --verbose --example reference
-  
+branches:
+  only:
+  - master
