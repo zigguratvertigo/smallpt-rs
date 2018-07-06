@@ -1,3 +1,5 @@
+#![feature(stdsimd)]
+
 extern crate minifb;
 extern crate smallpt;
 

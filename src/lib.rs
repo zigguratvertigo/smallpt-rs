@@ -1,4 +1,5 @@
 #![allow(unused_imports)]
+#![feature(stdsimd)]
 #[macro_use]
 
 extern crate log;

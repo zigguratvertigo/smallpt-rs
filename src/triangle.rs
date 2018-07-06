@@ -11,6 +11,7 @@ type Pt3 = Point3<f32>;
 use bvh::aabb::{Bounded, AABB};
 use bvh::bounding_hierarchy::{BHShape, BoundingHierarchy};
 use bvh::bvh::BVH;
+use std::simd::f32x4;
 
 #[derive(Copy, Clone)]
 pub struct Triangle {
@@ -31,9 +32,9 @@ pub struct Triangle {
 impl Triangle {
 	// Spawn a new rectangle
 	pub fn new(p0: Vec3, p1: Vec3, p2: Vec3, material: Material) -> Triangle {
-		let temp_p0: Point3<f32> = Pt3::new(p0.x, p0.y, p0.z);
-		let temp_p1: Point3<f32> = Pt3::new(p1.x, p1.y, p1.z);
-		let temp_p2: Point3<f32> = Pt3::new(p2.x, p2.y, p2.z);
+		let temp_p0 = f32x4::new(p0.x, p0.y, p0.z, 0.0f32);
+		let temp_p1 = f32x4::new(p1.x, p1.y, p1.z, 0.0f32);
+		let temp_p2 = f32x4::new(p2.x, p2.y, p2.z, 0.0f32);
 
 		Triangle {
 			p0: p0,
@@ -44,7 +45,7 @@ impl Triangle {
 			n1: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			n2: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			material: material,
-			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			aabb: AABB::empty().grow(temp_p0).grow(temp_p1).grow(temp_p2),
 			node_index: 0,
 		}
 	}
@@ -58,9 +59,9 @@ impl Triangle {
 		n2: Vec3,
 		material: Material,
 	) -> Triangle {
-		let temp_p0: Point3<f32> = Pt3::new(p0.x, p0.y, p0.z);
-		let temp_p1: Point3<f32> = Pt3::new(p1.x, p1.y, p1.z);
-		let temp_p2: Point3<f32> = Pt3::new(p2.x, p2.y, p2.z);
+		let temp_p0 = f32x4::new(p0.x, p0.y, p0.z, 0.0f32);
+		let temp_p1 = f32x4::new(p1.x, p1.y, p1.z, 0.0f32);
+		let temp_p2 = f32x4::new(p2.x, p2.y, p2.z, 0.0f32);
 
 		Triangle {
 			p0: p0,
@@ -71,7 +72,7 @@ impl Triangle {
 			n2: n2,
 			normal: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			material: material,
-			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			aabb: AABB::empty().grow(temp_p0).grow(temp_p1).grow(temp_p2),
 			node_index: 0,
 		}
 	}
@@ -127,11 +128,11 @@ impl Bounded for Triangle {
 }
 
 impl BHShape for Triangle {
-	fn set_bh_node_index(&mut self, index: usize) {
-		self.node_index = index;
-	}
+	// fn set_bh_node_index(&mut self, index: usize) {
+	// 	self.node_index = index;
+	// }
 
-	fn bh_node_index(&self) -> usize {
-		self.node_index
-	}
+	// fn bh_node_index(&self) -> usize {
+	// 	self.node_index
+	// }
 }
