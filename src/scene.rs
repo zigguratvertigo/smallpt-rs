@@ -14,7 +14,9 @@ use Traceable;
 pub struct Scene {
 	pub objects: Vec<Box<Traceable>>,
 	pub triangles: Vec<Triangle>,
+	//
 	bvh: BVH,
+	bvh_built: bool,
 }
 
 impl Scene {
@@ -31,6 +33,7 @@ impl Scene {
 			objects: vec![],
 			triangles: vec![],
 			bvh: BVH { nodes: vec![] },
+			bvh_built: false,
 		}
 	}
 
@@ -48,22 +51,24 @@ impl Scene {
 			}
 		}
 
-		let bvh_ray = NewRay::new(
-			Point3::new(ray.origin.x, ray.origin.y, ray.origin.z),
-			ray.direction,
-		);
-		let hits = self.bvh.traverse(&bvh_ray, &self.triangles);
+		if self.bvh_built {
+			let bvh_ray = NewRay::new(
+				Point3::new(ray.origin.x, ray.origin.y, ray.origin.z),
+				ray.direction,
+			);
+			let hits = self.bvh.traverse(&bvh_ray, &self.triangles);
 
-		// Triangles vs BVH
-		if hits.len() > 0 {
-			let mut current_hit = Hit::init();
+			// Triangles vs BVH
+			if hits.len() > 0 {
+				let mut current_hit = Hit::init();
 
-			// Of all the hits, return the closest hit
-			for hit in 0..hits.len() {
-				let hit = hits[hit].intersect(&ray, &mut current_hit);
+				// Of all the hits, return the closest hit
+				for hit in 0..hits.len() {
+					let hit = hits[hit].intersect(&ray, &mut current_hit);
 
-				if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
-					final_hit = current_hit;
+					if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
+						final_hit = current_hit;
+					}
 				}
 			}
 		}
@@ -77,5 +82,6 @@ impl Scene {
 
 	pub fn build_bvh(&mut self) {
 		self.bvh = BVH::build(&mut self.triangles);
+		self.bvh_built = true; //boo
 	}
 }
