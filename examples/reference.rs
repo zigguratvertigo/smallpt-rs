@@ -16,26 +16,26 @@ fn main() {
 
 	// Spheres
 	// Mirror
-	// scene.add(Box::new(Sphere::new(
-	// 	16.5,
-	// 	Vec3::new(27.0, 16.5, 47.0),
-	// 	Material::new(
-	// 		Vec3::new(0.0, 0.0, 0.0),
-	// 		Vec3::new(1.0, 1.0, 1.0),
-	// 		BSDF::Mirror,
-	// 	),
-	// )));
+	scene.add(Box::new(Sphere::new(
+		16.5,
+		Vec3::new(27.0, 16.5, 47.0),
+		Material::new(
+			Vec3::new(0.0, 0.0, 0.0),
+			Vec3::new(1.0, 1.0, 1.0),
+			BSDF::Mirror,
+		),
+	)));
 
-	// // Glass
-	// scene.add(Box::new(Sphere::new(
-	// 	16.5,
-	// 	Vec3::new(73.0, 16.5, 78.0),
-	// 	Material::new(
-	// 		Vec3::new(0.0, 0.0, 0.0),
-	// 		Vec3::new(1.0, 1.0, 1.0),
-	// 		BSDF::Glass,
-	// 	),
-	// )));
+	// Glass
+	scene.add(Box::new(Sphere::new(
+		16.5,
+		Vec3::new(73.0, 16.5, 78.0),
+		Material::new(
+			Vec3::new(0.0, 0.0, 0.0),
+			Vec3::new(1.0, 1.0, 1.0),
+			BSDF::Glass,
+		),
+	)));
 
 	// Planes
 	// Bottom
@@ -119,16 +119,16 @@ fn main() {
 		),
 	)));
 
-	scene.add_triangle(Triangle::new(
-		Vec3::new(20.0, 10.0, 50.0),
-		Vec3::new(20.0 + 30.0, 10.5, 50.0),
-		Vec3::new(20.0, 10.0 + 30.0, 50.0),
-		Material::new(
-			Vec3::new(0.0, 0.0, 0.0),
-			Vec3::new(1.0, 1.0, 1.0),
-			BSDF::Mirror,
-		),
-	));
+	// scene.add_triangle(Triangle::new(
+	// 	Vec3::new(20.0, 40.0, 50.0),
+	// 	Vec3::new(20.0 + 60.0, 40.0, 30.0),
+	// 	Vec3::new(20.0, 40.0 + 30.0, 30.0),
+	// 	Material::new(
+	// 		Vec3::new(0.0, 0.0, 0.0),
+	// 		Vec3::new(1.0, 1.0, 1.0),
+	// 		BSDF::Mirror,
+	// 	),
+	// ));
 
 	let my_bvh = scene.build_bvh();
 

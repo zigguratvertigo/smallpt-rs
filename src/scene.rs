@@ -55,14 +55,14 @@ impl Scene {
 		// Triangles vs BVH
 		if hits.len() > 0 {
 			let mut current_hit = Hit::init();
-			let hit = hits[0].intersect(&ray, &mut current_hit);
 
-			if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
-				final_hit = current_hit;
-				// println!(
-				// 	"We have a hit! {} {} {}",
-				// 	final_hit.p.x, final_hit.p.y, final_hit.p.z
-				// );
+			// Of all the hits, return the closest hit
+			for hit in 0..hits.len() {
+				let hit = hits[hit].intersect(&ray, &mut current_hit);
+
+				if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
+					final_hit = current_hit;
+				}
 			}
 		}
 
