@@ -14,6 +14,7 @@ use Traceable;
 pub struct Scene {
 	pub objects: Vec<Box<Traceable>>,
 	pub triangles: Vec<Triangle>,
+	bvh: BVH,
 }
 
 impl Scene {
@@ -29,10 +30,11 @@ impl Scene {
 		Scene {
 			objects: vec![],
 			triangles: vec![],
+			bvh: BVH { nodes: vec![] },
 		}
 	}
 
-	pub fn intersect(&self, ray: Ray, bvh: &BVH) -> Option<Hit> {
+	pub fn intersect(&self, ray: Ray) -> Option<Hit> {
 		let mut final_hit = Hit::init();
 
 		// Intersect parametric scene objects
@@ -50,7 +52,7 @@ impl Scene {
 			Point3::new(ray.origin.x, ray.origin.y, ray.origin.z),
 			ray.direction,
 		);
-		let hits = bvh.traverse(&bvh_ray, &self.triangles);
+		let hits = self.bvh.traverse(&bvh_ray, &self.triangles);
 
 		// Triangles vs BVH
 		if hits.len() > 0 {
@@ -73,7 +75,7 @@ impl Scene {
 		}
 	}
 
-	pub fn build_bvh(&mut self) -> BVH {
-		BVH::build(&mut self.triangles)
+	pub fn build_bvh(&mut self) {
+		self.bvh = BVH::build(&mut self.triangles);
 	}
 }

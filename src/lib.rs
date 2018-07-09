@@ -57,7 +57,6 @@ pub trait Traceable: Send + Sync {
 }
 
 pub fn trace(
-	bvh: &BVH,
 	scene: &Scene,
 	camera: &Camera,
 	width: usize,
@@ -96,7 +95,7 @@ pub fn trace(
 						direction: v.normalize(),
 					};
 
-					radiance += compute_radiance(ray, &scene, &bvh, 0, &mut num_rays);
+					radiance += compute_radiance(ray, &scene, 0, &mut num_rays);
 				}
 
 				ray_count.fetch_add(num_rays, Ordering::Relaxed);
@@ -111,9 +110,9 @@ fn luminance(color: Vec3) -> f32 {
 	0.299 * color.x + 0.587 * color.y + 0.114 * color.z
 }
 
-fn compute_radiance(ray: Ray, scene: &Scene, bvh: &BVH, depth: i32, num_rays: &mut usize) -> Vec3 {
+fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -> Vec3 {
 	*num_rays += 1;
-	let intersect: Option<Hit> = scene.intersect(ray, bvh);
+	let intersect: Option<Hit> = scene.intersect(ray);
 
 	match intersect {
 		None => Vec3::new(0.0, 0.0, 0.0),
@@ -152,7 +151,6 @@ fn compute_radiance(ray: Ray, scene: &Scene, bvh: &BVH, depth: i32, num_rays: &m
 					compute_radiance(
 						Ray::new(position, next_direction.normalize()),
 						scene,
-						&bvh,
 						depth + 1,
 						num_rays,
 					)
@@ -166,7 +164,6 @@ fn compute_radiance(ray: Ray, scene: &Scene, bvh: &BVH, depth: i32, num_rays: &m
 					compute_radiance(
 						Ray::new(position, r.normalize()),
 						scene,
-						&bvh,
 						depth + 1,
 						num_rays,
 					)
@@ -190,7 +187,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, bvh: &BVH, depth: i32, num_rays: &m
 
 					if cos2t < 0.0 {
 						// Total internal reflection
-						compute_radiance(reflection, scene, &bvh, depth + 1, num_rays)
+						compute_radiance(reflection, scene, depth + 1, num_rays)
 					} else {
 						let transmitted_dir = (ray.direction * nnt
 							- normal * (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
@@ -216,22 +213,16 @@ fn compute_radiance(ray: Ray, scene: &Scene, bvh: &BVH, depth: i32, num_rays: &m
 						if depth > 1 {
 							// Russian roulette between reflectance and transmittance
 							if rand::random::<f32>() < rr_propability {
-								compute_radiance(reflection, scene, &bvh, depth + 1, num_rays)
+								compute_radiance(reflection, scene, depth + 1, num_rays)
 									* reflectance_propability
 							} else {
-								compute_radiance(transmitted_ray, scene, &bvh, depth + 1, num_rays)
+								compute_radiance(transmitted_ray, scene, depth + 1, num_rays)
 									* transmittance_propability
 							}
 						} else {
-							compute_radiance(reflection, scene, &bvh, depth + 1, num_rays)
-								* reflectance
-								+ compute_radiance(
-									transmitted_ray,
-									scene,
-									&bvh,
-									depth + 1,
-									num_rays,
-								) * transmittance
+							compute_radiance(reflection, scene, depth + 1, num_rays) * reflectance
+								+ compute_radiance(transmitted_ray, scene, depth + 1, num_rays)
+									* transmittance
 						}
 					}
 				}

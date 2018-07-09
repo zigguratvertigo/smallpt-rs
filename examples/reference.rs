@@ -130,7 +130,7 @@ fn main() {
 		),
 	));
 
-	let my_bvh = scene.build_bvh();
+	scene.build_bvh();
 
 	let aperture = 0.5135;
 	let camera_origin = Vec3::new(50.0, 50.0, 300.0);
@@ -156,7 +156,6 @@ fn main() {
 
 	// Render
 	trace(
-		&my_bvh,
 		&scene,
 		&camera,
 		width,
