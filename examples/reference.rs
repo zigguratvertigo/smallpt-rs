@@ -6,7 +6,7 @@ use smallpt::*;
 use std::time::*;
 
 fn main() {
-	let num_samples = 256;
+	let num_samples = 64;
 	let width = 256;
 	let height = 256;
 
@@ -119,16 +119,16 @@ fn main() {
 		),
 	)));
 
-	// scene.add_triangle(Triangle::new(
-	// 	Vec3::new(20.0, 40.0, 50.0),
-	// 	Vec3::new(20.0 + 60.0, 40.0, 30.0),
-	// 	Vec3::new(20.0, 40.0 + 30.0, 30.0),
-	// 	Material::new(
-	// 		Vec3::new(0.0, 0.0, 0.0),
-	// 		Vec3::new(1.0, 1.0, 1.0),
-	// 		BSDF::Mirror,
-	// 	),
-	// ));
+	scene.add_triangle(Triangle::new(
+		Vec3::new(20.0, 40.0, 50.0),
+		Vec3::new(20.0 + 60.0, 40.0, 30.0),
+		Vec3::new(20.0, 40.0 + 30.0, 30.0),
+		Material::new(
+			Vec3::new(0.0, 0.0, 0.0),
+			Vec3::new(1.0, 1.0, 1.0),
+			BSDF::Mirror,
+		),
+	));
 
 	let my_bvh = scene.build_bvh();
 
