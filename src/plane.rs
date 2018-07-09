@@ -1,8 +1,9 @@
 use material::Material;
+use nalgebra::Vector3;
 use ray::Ray;
 use Hit;
+use PrimitiveType;
 use Traceable;
-use nalgebra::{Vector3};
 type Vec3 = Vector3<f32>;
 
 #[derive(Copy, Clone)]
@@ -43,5 +44,9 @@ impl Traceable for Plane {
 		} else {
 			return false;
 		}
+	}
+
+	fn get_primitive_type(&self) -> PrimitiveType {
+		PrimitiveType::Plane
 	}
 }

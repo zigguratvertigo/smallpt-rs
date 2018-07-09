@@ -1,6 +1,6 @@
 use material::Material;
-use std::f32::*;
 use nalgebra::*;
+use std::f32::*;
 type Vec3 = Vector3<f32>;
 
 #[derive(Copy, Clone)]
@@ -26,10 +26,10 @@ impl Hit {
 
 	pub fn init() -> Hit {
 		Hit {
-			p: Vec3::zeros(),
-			n: Vec3::zeros(),
+			p: Vec3::new(0.0, 0.0, 0.0),
+			n: Vec3::new(0.0, 0.0, 0.0),
 			t: INFINITY,
-			b: Vec3::zeros(),
+			b: Vec3::new(0.0, 0.0, 0.0),
 			material: Material::black(),
 		}
 	}

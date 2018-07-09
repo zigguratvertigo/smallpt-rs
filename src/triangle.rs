@@ -1,9 +1,16 @@
 use hit::Hit;
 use material::Material;
+use nalgebra::{Point3, Vector3};
 use ray::Ray;
+use PrimitiveType;
 use Traceable;
-use nalgebra::{Vector3};
+
 type Vec3 = Vector3<f32>;
+type Pt3 = Point3<f32>;
+
+use bvh::aabb::{Bounded, AABB};
+use bvh::bounding_hierarchy::{BHShape, BoundingHierarchy};
+use bvh::bvh::BVH;
 
 #[derive(Copy, Clone)]
 pub struct Triangle {
@@ -16,12 +23,18 @@ pub struct Triangle {
 	pub n2: Vec3,
 	//
 	pub material: Material,
-	// aabb: AABB,
+	//
+	aabb: AABB,
+	node_index: usize,
 }
 
 impl Triangle {
 	// Spawn a new rectangle
 	pub fn new(p0: Vec3, p1: Vec3, p2: Vec3, material: Material) -> Triangle {
+		let temp_p0: Point3<f32> = Pt3::new(p0.x, p0.y, p0.z);
+		let temp_p1: Point3<f32> = Pt3::new(p1.x, p1.y, p1.z);
+		let temp_p2: Point3<f32> = Pt3::new(p2.x, p2.y, p2.z);
+
 		Triangle {
 			p0: p0,
 			p1: p1,
@@ -31,7 +44,8 @@ impl Triangle {
 			n1: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			n2: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			material: material,
-			// aabb: AABB::empty().grow(&p0).grow(&p1).grow(&p2),
+			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			node_index: 0,
 		}
 	}
 	// Spawn a new rectangle, with per-vertex normals
@@ -44,6 +58,10 @@ impl Triangle {
 		n2: Vec3,
 		material: Material,
 	) -> Triangle {
+		let temp_p0: Point3<f32> = Pt3::new(p0.x, p0.y, p0.z);
+		let temp_p1: Point3<f32> = Pt3::new(p1.x, p1.y, p1.z);
+		let temp_p2: Point3<f32> = Pt3::new(p2.x, p2.y, p2.z);
+
 		Triangle {
 			p0: p0,
 			p1: p1,
@@ -53,6 +71,8 @@ impl Triangle {
 			n2: n2,
 			normal: (p2 - p0).normalize().cross(&(&p1 - &p0).normalize()),
 			material: material,
+			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			node_index: 0,
 		}
 	}
 }
@@ -63,13 +83,13 @@ impl Traceable for Triangle {
 		let p0p1 = self.p1 - self.p0;
 		let p0p2 = self.p2 - self.p0;
 		let pvec = r.direction.cross(&p0p2);
-		let det = p0p1.dot(&pvec);
 
 		// if the determinant is negative the triangle is backfacing
 		// if the determinant is close to 0, the ray misses the triangle
-		if det < 1e-6 {
-			return false;
-		}
+		let det = p0p1.dot(&pvec).abs(); // double-sided
+								   // if det < 1e-6 {
+								   // 	return false;
+								   // }
 
 		let tvec = r.origin - self.p0;
 		let u = tvec.dot(&pvec) / det;
@@ -90,9 +110,28 @@ impl Traceable for Triangle {
 		result.b = Vec3::new(1.0 - u - v, u, v);
 
 		// Compute interpolated normal
-		result.n =
-			result.b.x * self.n0 + result.b.y * self.n1 + result.b.z * self.n2;
+		result.n = result.b.x * self.n0 + result.b.y * self.n1 + result.b.z * self.n2;
 
 		return true;
+	}
+
+	fn get_primitive_type(&self) -> PrimitiveType {
+		PrimitiveType::Triangle
+	}
+}
+
+impl Bounded for Triangle {
+	fn aabb(&self) -> AABB {
+		self.aabb
+	}
+}
+
+impl BHShape for Triangle {
+	fn set_bh_node_index(&mut self, index: usize) {
+		self.node_index = index;
+	}
+
+	fn bh_node_index(&self) -> usize {
+		self.node_index
 	}
 }

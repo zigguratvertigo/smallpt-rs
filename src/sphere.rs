@@ -1,9 +1,10 @@
 use hit::Hit;
 use material::Material;
+use nalgebra::Vector3;
 use ray::Ray;
 use std;
+use PrimitiveType;
 use Traceable;
-use nalgebra::{Vector3};
 type Vec3 = Vector3<f32>;
 
 #[derive(Copy, Clone)]
@@ -42,7 +43,7 @@ impl Traceable for Sphere {
 				result.n = if result.n.dot(&ray.direction) < 0.0 {
 					result.n
 				} else {
-					result.n * -1.0
+					-result.n
 				};
 				result.material = self.material;
 
@@ -63,5 +64,9 @@ impl Traceable for Sphere {
 
 			return false;
 		}
+	}
+
+	fn get_primitive_type(&self) -> PrimitiveType {
+		PrimitiveType::Sphere
 	}
 }

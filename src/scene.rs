@@ -1,41 +1,79 @@
 use bsdf::BSDF;
+use bvh::aabb::{Bounded, AABB};
+use bvh::bounding_hierarchy::BoundingHierarchy;
+use bvh::bvh::BVH;
+use bvh::nalgebra::{Point3, Vector3};
+use bvh::ray::Ray as NewRay;
 use hit::Hit;
 use ray::Ray;
 use std::f32::*;
+use triangle::Triangle;
 use Traceable;
 
-#[derive(Default)]
+// #[derive(Default)]
 pub struct Scene {
-    pub objects: Vec<Box<Traceable>>,
+	pub objects: Vec<Box<Traceable>>,
+	pub triangles: Vec<Triangle>,
 }
 
 impl Scene {
-    pub fn add(&mut self, obj: Box<Traceable>) {
-        self.objects.push(obj);
-    }
+	pub fn add(&mut self, obj: Box<Traceable>) {
+		self.objects.push(obj);
+	}
 
-    pub fn init() -> Scene {
-        Scene { objects: vec![] }
-    }
+	pub fn add_triangle(&mut self, triangle: Triangle) {
+		self.triangles.push(triangle);
+	}
 
-    pub fn intersect(&self, ray: Ray) -> Option<Hit> {
-        let mut final_hit = Hit::init();
+	pub fn init() -> Scene {
+		Scene {
+			objects: vec![],
+			triangles: vec![],
+		}
+	}
 
-        // Intersect scene objects
-        for s in 0..self.objects.len() {
-            let mut current_hit = Hit::init();
-            let hit = self.objects[s].intersect(&ray, &mut current_hit);
+	pub fn intersect(&self, ray: Ray, bvh: &BVH) -> Option<Hit> {
+		let mut final_hit = Hit::init();
 
-            // todo: hit min&max
-            if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
-                final_hit = current_hit;
-            }
-        }
+		// Intersect parametric scene objects
+		for s in 0..self.objects.len() {
+			let mut current_hit = Hit::init();
+			let hit = self.objects[s].intersect(&ray, &mut current_hit);
 
-        if final_hit.t != INFINITY {
-            Some(final_hit)
-        } else {
-            None
-        }
-    }
+			// todo: hit min&max
+			if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
+				final_hit = current_hit;
+			}
+		}
+
+		let bvh_ray = NewRay::new(
+			Point3::new(ray.origin.x, ray.origin.y, ray.origin.z),
+			ray.direction,
+		);
+		let hits = bvh.traverse(&bvh_ray, &self.triangles);
+
+		// Triangles vs BVH
+		if hits.len() > 0 {
+			let mut current_hit = Hit::init();
+
+			// Of all the hits, return the closest hit
+			for hit in 0..hits.len() {
+				let hit = hits[hit].intersect(&ray, &mut current_hit);
+
+				if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
+					final_hit = current_hit;
+				}
+			}
+		}
+
+		if final_hit.t != INFINITY {
+			Some(final_hit)
+		} else {
+			None
+		}
+	}
+
+	pub fn build_bvh(&mut self) -> BVH {
+		BVH::build(&mut self.triangles)
+	}
 }
