@@ -18,7 +18,7 @@ rand = "0.5.3"
 num_cpus = "1.8.0"
 log = "0.4.3"
 nalgebra = "0.15"
-bvh = "=0.2.2"
+bvh = { git = "https://github.com/zigguratvertigo/bvh.git" }
 
 [dev-dependencies]
 minifb = "0.10.6"
