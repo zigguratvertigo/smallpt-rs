@@ -9,6 +9,7 @@ categories = ["rendering"]
 repository = "https://github.com/zigguratvertigo/smallpt-rs"
 readme = "README.md"
 build = "build.rs"
+exclude = ["images/*"]
 
 [badges]
 travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
