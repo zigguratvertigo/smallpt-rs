@@ -131,3 +131,7 @@ trace(&scene, &camera, width, height, num_samples, &mut backbuffer, &mut num_ray
 Status
 ------
 Code is still quite in flux, being refined on a weekly basis. More simplification and changes coming soon.
+
+Architecture
+------
+![alt text](https://github.com/zigguratvertigo/smallpt-rs/blob/master/images/smallpt-uml.png)
