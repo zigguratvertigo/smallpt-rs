@@ -6,7 +6,7 @@ A [Rust](https://www.rust-lang.org/) implementation of a small ray/pathtracer.
 
 Inspired by [Kevin Beason's educational 99-line raytracer/pathtracer](http://www.kevinbeason.com/smallpt/).
 
-![alt text](https://github.com/zigguratvertigo/smallpt-rs/blob/master/smallpt.png)
+![alt text](https://github.com/zigguratvertigo/smallpt-rs/blob/master/images/smallpt.png)
 
 Supports:
 - Ray-to-Sphere
