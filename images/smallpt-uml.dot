@@ -1,0 +1,32 @@
+digraph ml {
+    ndBSDF[label="{&lt;&lt;&lt;Enumeration&gt;&gt;&gt;\nBSDF|Diffuse\nMirror\nGlass}"][shape="record"];
+    ndCamera[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nCamera|+ origin: Vec3\n+ forward: Vec3\n+ right: Vec3\n+ up: Vec3|+ new(origin: Vec3, forward: Vec3, right: Vec3, up: Vec3) -&gt; Camera}"][shape="record"];
+    ndHit[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nHit|+ p: Vec3\n+ n: Vec3\n+ t: f32\n+ b: Vec3\n+ material: Material|+ new(p: Vec3, n: Vec3, t: f32, b: Vec3, material: Material) -&gt; Hit\n+ init() -&gt; Hit}"][shape="record"];
+    ndPrimitiveType[label="{&lt;&lt;&lt;Enumeration&gt;&gt;&gt;\nPrimitiveType|Triangle\nPlane\nRectangle\nSphere}"][shape="record"];
+    ndTraceable[label="{&lt;&lt;&lt;Trait&gt;&gt;&gt;\nTraceable|intersect(&amp;Self, &amp;Ray, &amp;mut Hit) -&gt; bool\nget_primitive_type(&amp;Self) -&gt; PrimitiveType}"][shape="record"];
+    ndMaterial[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nMaterial|+ emission: Vec3\n+ albedo: Vec3\n+ bsdf: BSDF|+ new(emission: Vec3, albedo: Vec3, bsdf: BSDF) -&gt; Material\n+ black() -&gt; Material\n+ white() -&gt; Material}"][shape="record"];
+    ndPlane[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nPlane|+ position: Vec3\n+ normal: Vec3\n+ material: Material|+ new(position: Vec3, normal: Vec3, material: Material) -&gt; Plane}"][shape="record"];
+    ndRay[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nRay|+ origin: Vec3\n+ direction: Vec3|+ new(origin: Vec3, direction: Vec3) -&gt; Ray}"][shape="record"];
+    ndRectangle[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nRectangle|+ position: Vec3\n+ normal: Vec3\n+ left: Vec3\n+ up: Vec3\n+ width: f32\n+ height: f32\n+ material: Material|+ new(position: Vec3, normal: Vec3, left: Vec3, up: Vec3, width: f32, height: f32, material: Material) -&gt; Rectangle}"][shape="record"];
+    ndScene[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nScene|+ objects: Vec&lt;Box&lt;Traceable&gt;&gt;\n+ triangles: Vec&lt;Triangle&gt;\n- bvh: BVH\n- bvh_built: bool|+ add(&amp;mut self, obj: Box&lt;Traceable&gt;)\n+ add_triangle(&amp;mut self, triangle: Triangle)\n+ init() -&gt; Scene\n+ intersect(&amp;self, ray: Ray) -&gt; Option&lt;Hit&gt;\n+ build_bvh(&amp;mut self)}"][shape="record"];
+    ndSphere[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nSphere|+ radius: f32\n+ position: Vec3\n+ material: Material|+ new(radius: f32, position: Vec3, material: Material) -&gt; Sphere}"][shape="record"];
+    ndTriangle[label="{&lt;&lt;&lt;Structure&gt;&gt;&gt;\nTriangle|+ p0: Vec3\n+ p1: Vec3\n+ p2: Vec3\n+ normal: Vec3\n+ n0: Vec3\n+ n1: Vec3\n+ n2: Vec3\n+ material: Material\n- aabb: AABB\n- node_index: usize|+ new(p0: Vec3, p1: Vec3, p2: Vec3, material: Material) -&gt; Triangle\n+ new_ext(p0: Vec3, p1: Vec3, p2: Vec3, n0: Vec3, n1: Vec3, n2: Vec3, material: Material) -&gt; Triangle}"][shape="record"];
+    ndBSDF -> ndMaterial[label=""][style="dashed"][arrowhead="diamond"];
+    ndHit -> ndScene[label=""][arrowhead="vee"];
+    ndPrimitiveType -> ndPlane[label=""][arrowhead="vee"];
+    ndPrimitiveType -> ndRectangle[label=""][arrowhead="vee"];
+    ndPrimitiveType -> ndSphere[label=""][arrowhead="vee"];
+    ndPrimitiveType -> ndTriangle[label=""][arrowhead="vee"];
+    ndTraceable -> ndPlane[label=""][style="dashed"][arrowhead="onormal"];
+    ndTraceable -> ndRectangle[label=""][style="dashed"][arrowhead="onormal"];
+    ndTraceable -> ndScene[label=""][arrowhead="diamond"];
+    ndTraceable -> ndSphere[label=""][style="dashed"][arrowhead="onormal"];
+    ndTraceable -> ndTriangle[label=""][style="dashed"][arrowhead="onormal"];
+    ndMaterial -> ndHit[label=""][style="dashed"][arrowhead="diamond"];
+    ndMaterial -> ndPlane[label=""][style="dashed"][arrowhead="diamond"];
+    ndMaterial -> ndRectangle[label=""][style="dashed"][arrowhead="diamond"];
+    ndMaterial -> ndSphere[label=""][style="dashed"][arrowhead="diamond"];
+    ndMaterial -> ndTriangle[label=""][style="dashed"][arrowhead="diamond"];
+    ndRay -> ndScene[label=""][style="dashed"][arrowhead="vee"];
+    ndTriangle -> ndScene[label=""][style="dashed"][arrowhead="diamond"];
+}

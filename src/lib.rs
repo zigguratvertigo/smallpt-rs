@@ -1,3 +1,5 @@
+//! ![uml](images/smallpt-uml.svg)
+
 #![allow(unused_imports)]
 #[macro_use]
 

@@ -8,6 +8,7 @@ authors = ["Colin Barré-Brisebois <colinbb@gmail.com>"]
 categories = ["rendering"]
 repository = "https://github.com/zigguratvertigo/smallpt-rs"
 readme = "README.md"
+build = "build.rs"
 
 [badges]
 travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
@@ -24,3 +25,5 @@ bvh = { git = "https://github.com/zigguratvertigo/bvh.git" }
 minifb = "0.10.6"
 structopt = "0.2.10"
 
+[build-dependencies.mml]
+version = "0.1"
