@@ -4,12 +4,10 @@ os:
   - linux
   - osx
 rust:
-  - stable
-  - beta
   - nightly
 matrix:
   allow_failures:
-    - rust: nightly
+    - rust: stable
 before_script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install xorg-dev; fi
 script:
