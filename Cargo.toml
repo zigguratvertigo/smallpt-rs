@@ -15,16 +15,16 @@ exclude = ["images/*"]
 travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
 
 [dependencies]
-rayon = "1.0.1"
+rayon = "1.0.3"
 rand = "0.5.3"
-num_cpus = "1.8.0"
-log = "0.4.3"
+num_cpus = "1.9.0"
+log = "0.4.6"
 nalgebra = "0.15"
 bvh = { git = "https://github.com/zigguratvertigo/bvh.git" }
 
 [dev-dependencies]
-minifb = "0.10.6"
-structopt = "0.2.10"
+minifb = "0.11.2"
+structopt = "0.2.14"
 
 [build-dependencies.mml]
 version = "0.1"
