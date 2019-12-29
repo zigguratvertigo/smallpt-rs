@@ -12,7 +12,7 @@ use Traceable;
 
 // #[derive(Default)]
 pub struct Scene {
-	pub objects: Vec<Box<Traceable>>,
+	pub objects: Vec<Box<dyn Traceable>>,
 	pub triangles: Vec<Triangle>,
 	//
 	bvh: BVH,
@@ -20,7 +20,7 @@ pub struct Scene {
 }
 
 impl Scene {
-	pub fn add(&mut self, obj: Box<Traceable>) {
+	pub fn add(&mut self, obj: Box<dyn Traceable>) {
 		self.objects.push(obj);
 	}
 
