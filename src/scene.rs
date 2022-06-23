@@ -2,11 +2,11 @@ use bsdf::BSDF;
 use bvh::aabb::{Bounded, AABB};
 use bvh::bounding_hierarchy::BoundingHierarchy;
 use bvh::bvh::BVH;
-use bvh::{Point3,};
 use bvh::ray::Ray as NewRay;
+use bvh::Point3;
 use hit::Hit;
 use ray::Ray;
-use std::f32::*;
+use std::f32::INFINITY;
 use triangle::Triangle;
 use Traceable;
 
@@ -46,7 +46,7 @@ impl Scene {
 			let hit = self.objects[s].intersect(&ray, &mut current_hit);
 
 			// todo: hit min&max
-			if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
+			if hit && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
 				final_hit = current_hit;
 			}
 		}
@@ -59,14 +59,14 @@ impl Scene {
 			let hits = self.bvh.traverse(&bvh_ray, &self.triangles);
 
 			// Triangles vs BVH
-			if hits.len() > 0 {
+			if !hits.is_empty() {
 				let mut current_hit = Hit::init();
 
 				// Of all the hits, return the closest hit
-				for hit in 0..hits.len() {
-					let hit = hits[hit].intersect(&ray, &mut current_hit);
+				for hit in hits {
+					let is_hit = hit.intersect(&ray, &mut current_hit);
 
-					if hit == true && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
+					if is_hit && current_hit.t < final_hit.t && current_hit.t > 1e-6 {
 						final_hit = current_hit;
 					}
 				}

@@ -1,4 +1,4 @@
-use bvh::*;
+use bvh::Vector3;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Camera {
@@ -11,10 +11,10 @@ pub struct Camera {
 impl Camera {
 	pub fn new(origin: Vector3, forward: Vector3, right: Vector3, up: Vector3) -> Camera {
 		Camera {
-			origin: origin,
-			forward: forward,
-			right: right,
-			up: up,
+			origin,
+			forward,
+			right,
+			up,
 		}
 	}
 }

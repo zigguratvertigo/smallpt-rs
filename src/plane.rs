@@ -1,5 +1,5 @@
+use bvh::Vector3;
 use material::Material;
-use bvh::*;
 use ray::Ray;
 use Hit;
 use PrimitiveType;
@@ -16,9 +16,9 @@ impl Plane {
 	// Spawn a new plane
 	pub fn new(position: Vector3, normal: Vector3, material: Material) -> Plane {
 		Plane {
-			position: position,
-			normal: normal,
-			material: material,
+			position,
+			normal,
+			material,
 		}
 	}
 }
@@ -39,9 +39,9 @@ impl Traceable for Plane {
 			};
 			result.material = self.material;
 
-			return true;
+			true
 		} else {
-			return false;
+			false
 		}
 	}
 

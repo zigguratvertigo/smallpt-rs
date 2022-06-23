@@ -1,6 +1,6 @@
+use bvh::Vector3;
 use hit::Hit;
 use material::Material;
-use bvh::*;
 use ray::Ray;
 use std;
 use PrimitiveType;
@@ -17,9 +17,9 @@ impl Sphere {
 	// Spawn a new sphere
 	pub fn new(radius: f32, position: Vector3, material: Material) -> Sphere {
 		Sphere {
-			radius: radius,
-			position: position,
-			material: material,
+			radius,
+			position,
+			material,
 		}
 	}
 }
@@ -31,7 +31,7 @@ impl Traceable for Sphere {
 		let det_sqrd: f32 = b * b - op.dot(op) + self.radius * self.radius;
 
 		if det_sqrd <= 0.0 {
-			return false;
+			false
 		} else {
 			let det = det_sqrd.sqrt();
 
@@ -61,7 +61,7 @@ impl Traceable for Sphere {
 				return true;
 			}
 
-			return false;
+			false
 		}
 	}
 

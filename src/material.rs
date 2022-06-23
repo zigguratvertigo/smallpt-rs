@@ -1,5 +1,5 @@
 use bsdf::BSDF;
-use bvh::*;
+use bvh::Vector3;
 
 #[derive(Copy, Clone)]
 pub struct Material {
@@ -11,9 +11,9 @@ pub struct Material {
 impl Material {
 	pub fn new(emission: Vector3, albedo: Vector3, bsdf: BSDF) -> Material {
 		Material {
-			emission: emission,
-			albedo: albedo,
-			bsdf: bsdf,
+			emission,
+			albedo,
+			bsdf,
 		}
 	}
 

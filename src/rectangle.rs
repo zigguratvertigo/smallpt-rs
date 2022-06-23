@@ -1,5 +1,5 @@
+use bvh::Vector3;
 use material::Material;
-use bvh::*;
 use plane::Plane;
 use ray::Ray;
 use PrimitiveType;
@@ -28,13 +28,13 @@ impl Rectangle {
 		material: Material,
 	) -> Rectangle {
 		Rectangle {
-			position: position,
-			normal: normal,
-			left: left,
-			up: up,
-			width: width,
-			height: height,
-			material: material,
+			position,
+			normal,
+			left,
+			up,
+			width,
+			height,
+			material,
 		}
 	}
 }
@@ -45,7 +45,7 @@ impl Traceable for Rectangle {
 		let rectangle_plane = Plane::new(self.position, self.normal, self.material);
 		let hit = rectangle_plane.intersect(r, result);
 
-		if hit == true {
+		if hit {
 			let p = r.origin + r.direction * result.t;
 			let v = p - self.position;
 
@@ -65,7 +65,7 @@ impl Traceable for Rectangle {
 			}
 		}
 
-		return false;
+		false
 	}
 
 	fn get_primitive_type(&self) -> PrimitiveType {

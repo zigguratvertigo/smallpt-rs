@@ -1,6 +1,6 @@
+use bvh::Vector3;
 use material::Material;
-use bvh::*;
-use std::f32::*;
+use std::f32::INFINITY;
 
 #[derive(Copy, Clone)]
 pub struct Hit {
@@ -15,11 +15,11 @@ impl Hit {
 	// Spawn a new Hit result data structure
 	pub fn new(p: Vector3, n: Vector3, t: f32, b: Vector3, material: Material) -> Hit {
 		Hit {
-			p: p,
-			n: n,
-			t: t,
-			b: b,
-			material: material,
+			p,
+			n,
+			t,
+			b,
+			material,
 		}
 	}
 

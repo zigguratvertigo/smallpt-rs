@@ -2,7 +2,6 @@
 
 #![allow(unused_imports)]
 #[macro_use]
-
 extern crate log;
 extern crate bvh;
 extern crate num_cpus;
@@ -93,7 +92,7 @@ pub fn trace(
 						direction: v.normalize(),
 					};
 
-					radiance += compute_radiance(ray, &scene, 0, &mut num_rays);
+					radiance += compute_radiance(ray, scene, 0, &mut num_rays);
 				}
 
 				ray_count.fetch_add(num_rays, Ordering::Relaxed);
@@ -188,18 +187,20 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 						compute_radiance(reflection, scene, depth + 1, num_rays)
 					} else {
 						let transmitted_dir = (ray.direction * nnt
-							- normal * (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
-							.normalize();
+							- normal
+								* (if into { 1.0 } else { -1.0 } * (ddn * nnt + cos2t.sqrt())))
+						.normalize();
 						let transmitted_ray = Ray::new(position, transmitted_dir);
 
 						let a = nt - nc;
 						let b = nt + nc;
 						let base_reflectance = a * a / (b * b);
-						let c = 1.0 - if into {
-							-ddn
-						} else {
-							transmitted_dir.dot(normal)
-						};
+						let c = 1.0
+							- if into {
+								-ddn
+							} else {
+								transmitted_dir.dot(normal)
+							};
 
 						let reflectance =
 							base_reflectance + (1.0 - base_reflectance) * c * c * c * c * c;
@@ -226,7 +227,7 @@ fn compute_radiance(ray: Ray, scene: &Scene, depth: i32, num_rays: &mut usize) -
 				}
 			};
 
-			return irradiance * f + hit.material.emission;
+			irradiance * f + hit.material.emission
 		}
 	}
 }
@@ -248,5 +249,5 @@ pub fn tonemap(color: Vector3) -> Vector3 {
 		color.z.powf(1.0 / 2.2),
 	);
 
-	return saturate(color_linear);
+	saturate(color_linear)
 }

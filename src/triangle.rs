@@ -1,6 +1,6 @@
+use bvh::{Vector3, Point3};
 use hit::Hit;
 use material::Material;
-use bvh::*;
 use ray::Ray;
 use PrimitiveType;
 use Traceable;
@@ -33,14 +33,14 @@ impl Triangle {
 		let temp_p2: Vector3 = Vector3::new(p2.x, p2.y, p2.z);
 
 		Triangle {
-			p0: p0,
-			p1: p1,
-			p2: p2,
+			p0,
+			p1,
+			p2,
 			normal: (p2 - p0).normalize().cross((p1 - p0).normalize()),
 			n0: (p2 - p0).normalize().cross((p1 - p0).normalize()),
 			n1: (p2 - p0).normalize().cross((p1 - p0).normalize()),
 			n2: (p2 - p0).normalize().cross((p1 - p0).normalize()),
-			material: material,
+			material,
 			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
 			node_index: 0,
 		}
@@ -60,14 +60,14 @@ impl Triangle {
 		let temp_p2: Point3 = Point3::new(p2.x, p2.y, p2.z);
 
 		Triangle {
-			p0: p0,
-			p1: p1,
-			p2: p2,
-			n0: n0,
-			n1: n1,
-			n2: n2,
+			p0,
+			p1,
+			p2,
+			n0,
+			n1,
+			n2,
 			normal: (p2 - p0).normalize().cross((p1 - p0).normalize()),
-			material: material,
+			material,
 			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
 			node_index: 0,
 		}
@@ -84,13 +84,13 @@ impl Traceable for Triangle {
 		// if the determinant is negative the triangle is backfacing
 		// if the determinant is close to 0, the ray misses the triangle
 		let det = p0p1.dot(pvec).abs(); // double-sided
-								   // if det < 1e-6 {
-								   // 	return false;
-								   // }
+								// if det < 1e-6 {
+								// 	return false;
+								// }
 
 		let tvec = r.origin - self.p0;
 		let u = tvec.dot(pvec) / det;
-		if u < 0.0 || u > 1.0 {
+		if !(0.0..=1.0).contains(&u) {
 			return false;
 		};
 
@@ -109,7 +109,7 @@ impl Traceable for Triangle {
 		// Compute interpolated normal
 		result.n = result.b.x * self.n0 + result.b.y * self.n1 + result.b.z * self.n2;
 
-		return true;
+		true
 	}
 
 	fn get_primitive_type(&self) -> PrimitiveType {
