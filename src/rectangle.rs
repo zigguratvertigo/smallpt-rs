@@ -1,17 +1,16 @@
 use material::Material;
-use nalgebra::Vector3;
+use bvh::*;
 use plane::Plane;
 use ray::Ray;
 use PrimitiveType;
 use Traceable;
-type Vec3 = Vector3<f32>;
 
 #[derive(Copy, Clone)]
 pub struct Rectangle {
-	pub position: Vec3,
-	pub normal: Vec3,
-	pub left: Vec3,
-	pub up: Vec3,
+	pub position: Vector3,
+	pub normal: Vector3,
+	pub left: Vector3,
+	pub up: Vector3,
 	pub width: f32,
 	pub height: f32,
 	pub material: Material,
@@ -20,10 +19,10 @@ pub struct Rectangle {
 impl Rectangle {
 	// Spawn a new rectangle
 	pub fn new(
-		position: Vec3,
-		normal: Vec3,
-		left: Vec3,
-		up: Vec3,
+		position: Vector3,
+		normal: Vector3,
+		left: Vector3,
+		up: Vector3,
 		width: f32,
 		height: f32,
 		material: Material,
@@ -54,9 +53,9 @@ impl Traceable for Rectangle {
 			let half_height = self.height * 0.5;
 
 			// Project in 2D plane and clamp inside the rectangle
-			if v.dot(&self.left).abs() <= half_width && v.dot(&self.up).abs() <= half_height {
+			if v.dot(self.left).abs() <= half_width && v.dot(self.up).abs() <= half_height {
 				result.p = p;
-				result.n = if self.normal.dot(&r.direction) < 0.0 {
+				result.n = if self.normal.dot(r.direction) < 0.0 {
 					self.normal
 				} else {
 					-self.normal

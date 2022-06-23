@@ -2,7 +2,7 @@ use bsdf::BSDF;
 use bvh::aabb::{Bounded, AABB};
 use bvh::bounding_hierarchy::BoundingHierarchy;
 use bvh::bvh::BVH;
-use bvh::nalgebra::{Point3, Vector3};
+use bvh::{Point3,};
 use bvh::ray::Ray as NewRay;
 use hit::Hit;
 use ray::Ray;
@@ -54,7 +54,7 @@ impl Scene {
 		if self.bvh_built {
 			let bvh_ray = NewRay::new(
 				Point3::new(ray.origin.x, ray.origin.y, ray.origin.z),
-				ray.direction,
+				Point3::new(ray.direction.x, ray.direction.y, ray.direction.z),
 			);
 			let hits = self.bvh.traverse(&bvh_ray, &self.triangles);
 

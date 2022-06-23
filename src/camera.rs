@@ -1,16 +1,15 @@
-use nalgebra::*;
-type Vec3 = Vector3<f32>;
+use bvh::*;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Camera {
-	pub origin: Vec3,
-	pub forward: Vec3,
-	pub right: Vec3,
-	pub up: Vec3,
+	pub origin: Vector3,
+	pub forward: Vector3,
+	pub right: Vector3,
+	pub up: Vector3,
 }
 
 impl Camera {
-	pub fn new(origin: Vec3, forward: Vec3, right: Vec3, up: Vec3) -> Camera {
+	pub fn new(origin: Vector3, forward: Vector3, right: Vector3, up: Vector3) -> Camera {
 		Camera {
 			origin: origin,
 			forward: forward,
