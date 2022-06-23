@@ -1,4 +1,4 @@
-use bvh::{Vector3, Point3};
+use bvh::{Point3, Vector3};
 use hit::Hit;
 use material::Material;
 use ray::Ray;
@@ -28,10 +28,6 @@ pub struct Triangle {
 impl Triangle {
 	// Spawn a new rectangle
 	pub fn new(p0: Vector3, p1: Vector3, p2: Vector3, material: Material) -> Triangle {
-		let temp_p0: Vector3 = Vector3::new(p0.x, p0.y, p0.z);
-		let temp_p1: Vector3 = Vector3::new(p1.x, p1.y, p1.z);
-		let temp_p2: Vector3 = Vector3::new(p2.x, p2.y, p2.z);
-
 		Triangle {
 			p0,
 			p1,
@@ -41,7 +37,7 @@ impl Triangle {
 			n1: (p2 - p0).normalize().cross((p1 - p0).normalize()),
 			n2: (p2 - p0).normalize().cross((p1 - p0).normalize()),
 			material,
-			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			aabb: AABB::empty().grow(&p0).grow(&p1).grow(&p2),
 			node_index: 0,
 		}
 	}
@@ -55,10 +51,6 @@ impl Triangle {
 		n2: Vector3,
 		material: Material,
 	) -> Triangle {
-		let temp_p0: Point3 = Point3::new(p0.x, p0.y, p0.z);
-		let temp_p1: Point3 = Point3::new(p1.x, p1.y, p1.z);
-		let temp_p2: Point3 = Point3::new(p2.x, p2.y, p2.z);
-
 		Triangle {
 			p0,
 			p1,
@@ -68,7 +60,7 @@ impl Triangle {
 			n2,
 			normal: (p2 - p0).normalize().cross((p1 - p0).normalize()),
 			material,
-			aabb: AABB::empty().grow(&temp_p0).grow(&temp_p1).grow(&temp_p2),
+			aabb: AABB::empty().grow(&p0).grow(&p1).grow(&p2),
 			node_index: 0,
 		}
 	}
