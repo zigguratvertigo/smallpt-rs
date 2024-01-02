@@ -15,10 +15,10 @@ exclude = ["images/*"]
 travis-ci = { repository = "zigguratvertigo/smallpt-rs" }
 
 [dependencies]
-rayon = "1.5.3"
+rayon = "1.8.0"
 rand = "0.8.5"
-num_cpus = "1.13.1"
-log = "0.4.17"
+num_cpus = "1.16"
+log = "0.4.20"
 bvh = "0.7.2"
 
 [dev-dependencies]
