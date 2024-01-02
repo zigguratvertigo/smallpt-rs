@@ -1,6 +1,8 @@
+extern crate bvh;
 extern crate minifb;
 extern crate smallpt;
 
+use bvh::Vector3;
 use minifb::{Key, Window, WindowOptions};
 use smallpt::*;
 
