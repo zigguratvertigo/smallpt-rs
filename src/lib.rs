@@ -27,7 +27,7 @@ pub mod triangle;
 pub mod vector;
 
 pub use bsdf::*;
-pub use bvh::*;
+pub(crate) use bvh::*;
 pub use camera::*;
 pub use hit::*;
 pub use material::*;
