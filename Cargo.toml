@@ -1,6 +1,6 @@
 ﻿[package]
 name = "smallpt"
-version = "0.4.2"
+version = "1.0.0"
 edition = "2021"
 license = "MIT"
 description = "A small ray/pathtracer in Rust, inspired by Kevin Beason's educational 99-lines ray/pathtracer (http://www.kevinbeason.com/smallpt/)"
