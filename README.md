@@ -12,7 +12,7 @@ Supports:
 - Ray-to-Sphere
 - Ray-to-Plane
 - Ray-to-Rectangle
-- Ray-to-Triangle (slow, no acceleration yet. Soon)
+- Ray-to-Triangle
 
 Usage
 -----
@@ -26,9 +26,6 @@ smallpt = "1.0"
 Example
 -------
 ```rust
-extern crate smallpt;
-extern crate minifb;
-
 use smallpt::*;
 use minifb::{Key, Window, WindowOptions};
 
@@ -37,7 +34,7 @@ fn main() {
     let width = 512;
     let height = 512;
 
-    let mut backbuffer = vec![Vector3::new(0.0, 0.0, 0.0); width * height];
+    let mut backbuffer = vec![Vec3::new(0.0, 0.0, 0.0); width * height];
 
     let mut scene = Scene::init();
 
@@ -45,76 +42,76 @@ fn main() {
     // Mirror
     scene.add(Box::new(Sphere::new(
         16.5,
-        Vector3::new(27.0, 16.5, 47.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0), BSDF::Mirror),
+        Vec3::new(27.0, 16.5, 47.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0), BSDF::Mirror),
     )));
 
     // Glass
     scene.add(Box::new(Sphere::new(
         16.5,
-        Vector3::new(73.0, 16.5, 78.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(1.0, 1.0, 1.0), BSDF::Glass),
+        Vec3::new(73.0, 16.5, 78.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0), BSDF::Glass),
     )));
 
     // Planes
     // Bottom
     scene.add(Box::new(Plane::new(
-        Vector3::new(0.0, 0.0, 0.0),
-        Vector3::new(0.0, 1.0, 0.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
     )));
 
     // Left
     scene.add(Box::new(Plane::new(
-        Vector3::new(1.0, 0.0, 0.0),
-        Vector3::new(1.0, 0.0, 0.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.75, 0.25, 0.25), BSDF::Diffuse),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.75, 0.25, 0.25), BSDF::Diffuse),
     )));
 
     // Right
     scene.add(Box::new(Plane::new(
-        Vector3::new(99.0, 0.0, 0.0),
-        Vector3::new(-1.0, 0.0, 0.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.25, 0.25, 0.75), BSDF::Diffuse),
+        Vec3::new(99.0, 0.0, 0.0),
+        Vec3::new(-1.0, 0.0, 0.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.25, 0.25, 0.75), BSDF::Diffuse),
     )));
 
     // Front
     scene.add(Box::new(Plane::new(
-        Vector3::new(0.0, 0.0, 0.0),
-        Vector3::new(0.0, 0.0, 1.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+        Vec3::new(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 1.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
     )));
 
     // Back
     scene.add(Box::new(Plane::new(
-        Vector3::new(0.0, 0.0, 170.0),
-        Vector3::new(0.0, 0.0, -1.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.0, 0.0, 0.0), BSDF::Diffuse),
+        Vec3::new(0.0, 0.0, 170.0),
+        Vec3::new(0.0, 0.0, -1.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 0.0), BSDF::Diffuse),
     )));
 
     // Top
     scene.add(Box::new(Plane::new(
-        Vector3::new(0.0, 81.6, 0.0),
-        Vector3::new(0.0, -1.0, 0.0),
-        Material::new(Vector3::new(0.0, 0.0, 0.0), Vector3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
+        Vec3::new(0.0, 81.6, 0.0),
+        Vec3::new(0.0, -1.0, 0.0),
+        Material::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(0.75, 0.75, 0.75), BSDF::Diffuse),
     )));
 
     // Light (emissive rectangle)
     scene.add(Box::new(Rectangle::new(
-        Vector3::new(50.0, 81.5, 50.0),
-        Vector3::new(0.0, -1.0, 0.0),
-        Vector3::new(1.0, 0.0, 0.0),
-        Vector3::new(0.0, 0.0, 1.0),
+        Vec3::new(50.0, 81.5, 50.0),
+        Vec3::new(0.0, -1.0, 0.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, 1.0),
         33.0,
         33.0,
-        Material::new(Vector3::new(12.0, 12.0, 12.0), Vector3::new(0.0, 0.0, 0.0), BSDF::Diffuse),
+        Material::new(Vec3::new(12.0, 12.0, 12.0), Vec3::new(0.0, 0.0, 0.0), BSDF::Diffuse),
     )));
 
     let camera = Camera {
-        origin: Vector3::new(50.0, 50.0, 200.0),
-        forward: Vector3::new(0.0, -0.05, -1.0).normalize(),
-        right: Vector3::new(1.0, 0.0, 0.0).normalize(),
-        up: Vector3::new(0.0, 1.0, 0.0).normalize(),
+        origin: Vec3::new(50.0, 50.0, 200.0),
+        forward: Vec3::new(0.0, -0.05, -1.0).normalize(),
+        right: Vec3::new(1.0, 0.0, 0.0).normalize(),
+        up: Vec3::new(0.0, 1.0, 0.0).normalize(),
     };
 
     let mut buffer: Vec<u32> = vec![0; width * height];
