@@ -1,21 +1,17 @@
-use bvh::Vector3;
-use hit::Hit;
-use material::Material;
-use ray::Ray;
-use std;
-use PrimitiveType;
-use Traceable;
+use crate::hit::Hit;
+use crate::material::Material;
+use crate::ray::Ray;
+use crate::{PrimitiveType, Traceable, Vec3};
 
 #[derive(Copy, Clone)]
 pub struct Sphere {
 	pub radius: f32,
-	pub position: Vector3,
+	pub position: Vec3,
 	pub material: Material,
 }
 
 impl Sphere {
-	// Spawn a new sphere
-	pub fn new(radius: f32, position: Vector3, material: Material) -> Sphere {
+	pub fn new(radius: f32, position: Vec3, material: Material) -> Sphere {
 		Sphere {
 			radius,
 			position,
@@ -26,9 +22,9 @@ impl Sphere {
 
 impl Traceable for Sphere {
 	fn intersect(&self, ray: &Ray, result: &mut Hit) -> bool {
-		let op: Vector3 = self.position - ray.origin;
-		let b: f32 = op.dot(ray.direction);
-		let det_sqrd: f32 = b * b - op.dot(op) + self.radius * self.radius;
+		let op: Vec3 = self.position - ray.origin;
+		let b: f32 = op.dot(&ray.direction);
+		let det_sqrd: f32 = b * b - op.dot(&op) + self.radius * self.radius;
 
 		if det_sqrd <= 0.0 {
 			false
@@ -39,7 +35,7 @@ impl Traceable for Sphere {
 				result.t = b - det;
 				result.p = ray.origin + ray.direction * result.t;
 				result.n = (self.position - result.p).normalize();
-				result.n = if result.n.dot(ray.direction) < 0.0 {
+				result.n = if result.n.dot(&ray.direction) < 0.0 {
 					result.n
 				} else {
 					-result.n
@@ -51,7 +47,7 @@ impl Traceable for Sphere {
 				result.t = b + det;
 				result.p = ray.origin + ray.direction * result.t;
 				result.n = (self.position - result.p).normalize();
-				result.n = if result.n.dot(ray.direction) < 0.0 {
+				result.n = if result.n.dot(&ray.direction) < 0.0 {
 					result.n
 				} else {
 					-result.n

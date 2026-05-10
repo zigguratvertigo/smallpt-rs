@@ -1,15 +1,15 @@
-use bsdf::BSDF;
-use bvh::Vector3;
+use crate::bsdf::BSDF;
+use crate::Vec3;
 
 #[derive(Copy, Clone)]
 pub struct Material {
-	pub emission: Vector3,
-	pub albedo: Vector3,
+	pub emission: Vec3,
+	pub albedo: Vec3,
 	pub bsdf: BSDF,
 }
 
 impl Material {
-	pub fn new(emission: Vector3, albedo: Vector3, bsdf: BSDF) -> Material {
+	pub fn new(emission: Vec3, albedo: Vec3, bsdf: BSDF) -> Material {
 		Material {
 			emission,
 			albedo,
@@ -19,16 +19,16 @@ impl Material {
 
 	pub fn black() -> Material {
 		Material {
-			emission: Vector3::new(0.0, 0.0, 0.0),
-			albedo: Vector3::new(0.0, 0.0, 0.0),
+			emission: Vec3::new(0.0, 0.0, 0.0),
+			albedo: Vec3::new(0.0, 0.0, 0.0),
 			bsdf: BSDF::Diffuse,
 		}
 	}
 
 	pub fn white() -> Material {
 		Material {
-			emission: Vector3::new(0.0, 0.0, 0.0),
-			albedo: Vector3::new(1.0, 1.0, 1.0),
+			emission: Vec3::new(0.0, 0.0, 0.0),
+			albedo: Vec3::new(1.0, 1.0, 1.0),
 			bsdf: BSDF::Diffuse,
 		}
 	}
